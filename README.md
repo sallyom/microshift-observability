@@ -5,6 +5,7 @@
 Follow the Microshift documentation for bootstrapping a MicroShift instance running in a RHEL 8.7 Virtual Machine.
 [Red Hat Enterprise Linux 8.7 virtual machine with MicroShift](https://github.com/openshift/microshift/blob/main/docs/devenv_rhel8_auto.md)
 
+Only follow the above documentation to start the machine. To configure the machine, follow the below steps.
 Once the virtual machine is running, use the IP address and `microshift:microshift` to ssh into the virtual machine.
 Also, scp the pull-secret (follow above documentation) and the configure script over to the VM.
 
@@ -12,7 +13,7 @@ Also, scp the pull-secret (follow above documentation) and the configure script 
 sudo virsh domifaddr microshift-dev # note the IP address 
 export IP_ADDR=<ip address from above>
 # password is 'microshift' for below cmds
-scp ./manifests/microshift/configure-vm.sh  microshift@${IPADDR}:
+scp ./configure-microshift-vm.sh  microshift@${IPADDR}:
 scp ~/.pull-secret.json microshift@${IPADDR}:
 ssh microshift@${IPADDR}
 ```
@@ -24,8 +25,6 @@ Configure cgroups-v2 and run the configuration script.
 ```bash
 ./configure-microshift-vm.sh ~/.pull-secret.json
 # script will ask for your RH account creds for subscription, then will run unattended
-# Kepler must run with cgroups-v2 when running in a virtual machine
-sudo grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=1"
 # reboot VM and ssh back in
 ```
 
@@ -58,19 +57,19 @@ oc apply --kustomize $(pwd)/manifests/openshift/kepler
 # https://cert-manager.io/docs/installation/#default-static-install
 oc apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
 
-oc apply -f $(pwd)/manifests/microshift/opentelemetry-operator.yaml
+oc apply -f $(pwd)/manifests/opentelemetry-operator.yaml
 ```
 
 ### Create OpenTelemetryCollector in kepler namespace
 
-This will trigger the deployment of an opentelemetry-collector pod in the kepler namespace.
+Trigger the deployment of an opentelemetry-collector pod in the kepler namespace.
 
-Edit `otelcol.yaml` to configure the correct prometheus exporter. This example
+Edit `manifests/otelcol.yaml` to configure the correct prometheus exporter. This example
 configures a `prometheusremotewrite` exporter to send data to GrafanaCloud.
 View [this Grafana Engineering post](https://grafana.com/blog/2022/05/10/how-to-collect-prometheus-metrics-with-the-opentelemetry-collector-and-grafana/) for more details.
 
 ```bash
-oc apply -f $(pwd)/otelcol.yaml
+oc apply -f $(pwd)/manifests/otelcol.yaml
 ```
 
 An opentelemetry-collector deployment will be triggered by the creation of the OpenTelemetryCollector resource. View the logs of the opentelemetry-collector pod to

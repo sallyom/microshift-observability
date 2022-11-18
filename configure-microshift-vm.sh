@@ -1,7 +1,8 @@
 #!/bin/bash
 #
 # This script automates the VM configuration steps described in the "MicroShift Development Environment on RHEL 8" document.
-# See https://github.com/openshift/microshift/blob/main/docs/devenv_rhel8.md
+# See https://github.com/openshift/microshift/blob/main/docs/devenv_rhel8_auto.md and 
+# https://github.com/openshift/microshift/blob/main/docs/devenv_rhel8.md
 #
 set -eo pipefail
 
@@ -70,6 +71,9 @@ sudo firewall-cmd --permanent --zone=trusted --add-source=10.42.0.0/16
 sudo firewall-cmd --permanent --zone=trusted --add-source=169.254.169.1
 sudo firewall-cmd --reload
 
+sudo grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=1"
+
 echo ""
+echo "Kepler must run with cgroups-v2 when running in a virtual machine. Roboot machine before starting MicroShift."
 echo "The configuration phase completed."
 echo "Done"
