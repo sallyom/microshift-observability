@@ -16,6 +16,9 @@ metadata:
   name: otelcol
   namespace: kepler
 spec:
+  hostNetwork: true
+  hostName: 192.168.122.96
+  serviceAccount: kepler-sa
   config: |
     receivers:
       prometheus:
@@ -35,7 +38,7 @@ spec:
       prometheusremotewrite:
         endpoint: https://<USERNAME>:<PASSWORD>@<PROMENDPOINTURL>
         # for me looks something like: 
-        # endpoint: https://643222:eyJrxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxOH0=@prometheus-prod-10-prod-us-central-0.grafana.net/api/prom/push
+        # endpoint: https://643999:eyJrIjoixxxxxxxxxxxxxxxxxxxxxxOH0=@prometheus-prod-10-prod-us-central-0.grafana.net/api/prom/push
 
     service:
       pipelines:
@@ -54,3 +57,4 @@ spec:
   - configMap:
       name: otelcol-cabundle
     name: cabundle-volume
+

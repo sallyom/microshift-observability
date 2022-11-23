@@ -1,11 +1,11 @@
-## Deploying Kepler on MicroShift (in KVM) and export to GrafanaCloud
+## Kepler on MicroShift local VM to GrafanaCloud
 
 ### MicroShift deployment in KVM
 
 Follow the Microshift documentation for bootstrapping a MicroShift instance running in a RHEL 8.7 Virtual Machine. Complete all prerequisites.
 [Red Hat Enterprise Linux 8.7 virtual machine Getting Started with MicroShift](https://github.com/openshift/microshift/blob/main/docs/getting_started.md)
 
-## Bootstrap MicroShift
+### Bootstrap MicroShift
 
 [Bootstrap command from MicroShift documentation](https://raw.githubusercontent.com/openshift/microshift/main/docs/getting_started.md)
 
@@ -44,7 +44,7 @@ scp ~/.pull-secret.json redhat@${IPADDR}:
 ssh redhat@${IPADDR}
 ```
 
-## Execute below commands from within the virtual machine
+### Execute below commands from within the virtual machine
 
 Configure cgroups-v2 and run the configuration script.
 
@@ -54,7 +54,7 @@ Configure cgroups-v2 and run the configuration script.
 # reboot VM and ssh back in
 ```
 
-### Start MicroShift service
+#### Start MicroShift service
 
 ```bash
 sudo systemctl enable --now microshift
@@ -64,26 +64,45 @@ sudo chown -R redhat:redhat ~/.kube
 oc get pods -A # all pods should soon be running
 ```
 
-### Kepler Deployment
+#### Kepler Deployment
 
 ```bash
 git clone https://github.com/sustainable-computing-io/kepler.git
 cd kepler
+```
+
+Edit the daemonset yaml at `manifests/openshift/kepler/01-kepler-install.yaml` like so.
+
+```bash
+      hostNetwork: true
+      containers:
+      - name: kepler-exporter
+and
+        env:
+        - name: NODE_NAME
+          value: localhost
+```
+
+Apply the kepler manifests.
+
+```bash
 oc apply --kustomize $(pwd)/manifests/openshift/kepler
 # Check that kepler pod is up and running before proceeding
 ```
 
-### Deploy OpenTelemetry Operator and Cert-Manager
+#### Deploy OpenTelemetry Operator and Cert-Manager
+
+> Note: Neither OpenTelemetry Operator nor Cert-Manager are required. It is possible to deploy a standalone OpenTelemetryCollector deployment. If running in resource constrained environment, a standalone collector deployment + service + configmap  would be a lighter solution. Also, with MicroShift the OpenTelemetry Operator does not require Cert-Manager, since the `service-ca` deployment handles TLS certificates. The default OpenTelemetry Operator manifests expect cert-manager and that is the only reason it is deployed here, out of ~laziness/not wanting to update otel manifests~ convenience.
 
 ```bash
-# OpenTelemetryOperator depends on cert-manager running
+# OpenTelemetry Operator manifests depend on cert-manager
 # https://cert-manager.io/docs/installation/#default-static-install
 oc apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
 
 oc apply -f $(pwd)/manifests/opentelemetry-operator.yaml
 ```
 
-### Create OpenTelemetryCollector in kepler namespace
+#### Create OpenTelemetryCollector in kepler namespace
 
 Trigger the deployment of an opentelemetry-collector pod in the kepler namespace.
 
@@ -100,3 +119,7 @@ ensure the pod is collecting metrics from the kepler-exporter.
 Follow the Grafana documentation to import the Kepler-Exporter dashboard.
 
 [Kepler dashboard to import](https://github.com/sustainable-computing-io/kepler/blob/main/grafana-dashboards/Kepler-Exporter.json)
+
+Hopefully, you'll see something like this!
+
+![You might see something like this!](./images/kepler-microshift.png "MicroShift, Kepler, and OpenTelemetry")
