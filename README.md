@@ -90,32 +90,35 @@ oc apply --kustomize $(pwd)/manifests/openshift/kepler
 # Check that kepler pod is up and running before proceeding
 ```
 
-#### Deploy OpenTelemetry Operator and Cert-Manager
+#### Create OpenTelemetry Collector configmaps
 
-> Note: Neither OpenTelemetry Operator nor Cert-Manager are required. It is possible to deploy a standalone OpenTelemetryCollector deployment. If running in resource constrained environment, a standalone collector deployment + service + configmap  would be a lighter solution. Also, with MicroShift the OpenTelemetry Operator does not require Cert-Manager, since the `service-ca` deployment handles TLS certificates. The default OpenTelemetry Operator manifests expect cert-manager and that is the only reason it is deployed here, out of ~laziness/not wanting to update otel manifests~ convenience.
-
-```bash
-# OpenTelemetry Operator manifests depend on cert-manager
-# https://cert-manager.io/docs/installation/#default-static-install
-oc apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
-
-oc apply -f $(pwd)/manifests/opentelemetry-operator.yaml
-```
-
-#### Create OpenTelemetryCollector in kepler namespace
-
-Trigger the deployment of an opentelemetry-collector pod in the kepler namespace.
-
-Edit `manifests/otelcol.yaml` to configure the correct prometheus exporter. This example
-configures a `prometheusremotewrite` exporter to send data to GrafanaCloud.
+Edit `manifests/otel-collector/otelcol-config.yaml` to configure the correct receivers, exporters, and pipelines.
+Then apply the configmap yaml files.
+This example configures a `prometheusremotewrite` exporter to send data to GrafanaCloud.
 View [this Grafana Engineering post](https://grafana.com/blog/2022/05/10/how-to-collect-prometheus-metrics-with-the-opentelemetry-collector-and-grafana/) for more details.
 
 ```bash
-oc apply -f $(pwd)/manifests/otelcol.yaml
+oc apply -f manifests/otel-collector/cabundle-cm.yaml -n kepler
+oc apply -f manifests/otel-collector/otelcol-config.yaml -n kepler
 ```
 
-An opentelemetry-collector deployment will be triggered by the creation of the OpenTelemetryCollector resource. View the logs of the opentelemetry-collector pod to
-ensure the pod is collecting metrics from the kepler-exporter.
+#### Patch kepler-exporter service to add otel-collector ports
+
+```bash
+oc patch service/kepler-exporter -n kepler --patch-file manifests/otel-collector/service-patch.yaml
+```
+
+#### Patch kepler-exporter daemonset to add otel-collector container
+
+```bash
+oc patch daemonset/kepler-exporter -n kepler --patch-file manifests/otel-collector/daemonset-patch.yaml
+```
+
+An opentelemetry-collector container should now be running with kepler-exporter daemonset. View the logs of the kepler-exporter pod to
+ensure the pod is collecting metrics from the kepler-exporter and sending to opentelemetrycollector.
+
+### Import and view grafana dashboard
+
 Follow the Grafana documentation to import the Kepler-Exporter dashboard.
 
 [Kepler dashboard to import](https://github.com/sustainable-computing-io/kepler/blob/main/grafana-dashboards/Kepler-Exporter.json)

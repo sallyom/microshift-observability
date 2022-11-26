@@ -1,1 +1,2 @@
-manifests/private-*
+manifests/opentelemetry-operator/private-*
+manifests/otel-collector/private-*
