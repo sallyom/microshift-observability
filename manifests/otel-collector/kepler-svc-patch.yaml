@@ -6,9 +6,9 @@ spec:
   - name: kepler-exporter
     port: 9102
     targetPort: kepler-exporter
-  - name: otlp # Default endpoint for OpenTelemetry receiver.
-    port: 4317
-    protocol: TCP
-    targetPort: 4317
+  #- name: otlp # Default endpoint for OpenTelemetry receiver.
+  #  port: 4317
+  #  protocol: TCP
+  #  targetPort: 4317
   - name: metrics # Default endpoint for querying metrics.
     port: 8888

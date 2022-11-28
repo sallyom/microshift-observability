@@ -17,7 +17,7 @@ metadata:
   namespace: kepler
 spec:
   hostNetwork: true
-  hostName: 192.168.122.96
+  hostName: localhost
   serviceAccount: kepler-sa
   config: |
     receivers:
@@ -27,7 +27,7 @@ spec:
           - job_name: 'otel-collector'
             scrape_interval: 5s
             static_configs:
-             - targets: ['kepler-exporter.kepler.svc:9102']
+             - targets: ['0.0.0.0:9102']
 
     processors:
       batch:
@@ -57,4 +57,3 @@ spec:
   - configMap:
       name: otelcol-cabundle
     name: cabundle-volume
-

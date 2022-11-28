@@ -105,13 +105,13 @@ oc apply -f manifests/otel-collector/otelcol-config.yaml -n kepler
 #### Patch kepler-exporter service to add otel-collector ports
 
 ```bash
-oc patch service/kepler-exporter -n kepler --patch-file manifests/otel-collector/service-patch.yaml
+oc patch service/kepler-exporter -n kepler --patch-file manifests/otel-collector/kepler-svc-patch.yaml
 ```
 
 #### Patch kepler-exporter daemonset to add otel-collector container
 
 ```bash
-oc patch daemonset/kepler-exporter -n kepler --patch-file manifests/otel-collector/daemonset-patch.yaml
+oc patch daemonset/kepler-exporter -n kepler --patch-file manifests/otel-collector/kepler-ds-patch.yaml
 ```
 
 An opentelemetry-collector container should now be running with kepler-exporter daemonset. View the logs of the kepler-exporter pod to

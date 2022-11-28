@@ -1,0 +1,127 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: grafana-agent-traces
+  namespace: grafana
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: grafana-agent-traces
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: grafana-agent-traces
+subjects:
+- kind: ServiceAccount
+  name: grafana-agent-traces
+  namespace: grafana # this must match the ns where you create the grafana-agent deployment
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    name: grafana-agent-traces
+  name: grafana-agent-traces
+  namespace: grafana
+spec:
+  ports:
+  - name: grafana-agent-traces-http-metrics
+    port: 9999
+    targetPort: 9999
+  - name: grafana-agent-traces-thrift-compact
+    port: 6831
+    protocol: UDP
+    targetPort: 6831
+  - name: grafana-agent-traces-thrift-binary
+    port: 6832
+    protocol: UDP
+    targetPort: 6832
+  - name: grafana-agent-traces-thrift-http
+    port: 14268
+    protocol: TCP
+    targetPort: 14268
+  - name: grafana-agent-traces-thrift-grpc
+    port: 14250
+    protocol: TCP
+    targetPort: 14250
+  - name: grafana-agent-traces-zipkin
+    port: 9411
+    protocol: TCP
+    targetPort: 9411
+  - name: grafana-agent-traces-otlp
+    port: 4317
+    protocol: TCP
+    targetPort: 4317
+  - name: grafana-agent-traces-opencensus
+    port: 55678
+    protocol: TCP
+    targetPort: 55678
+  selector:
+    name: grafana-agent-traces
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana-agent-traces
+  namespace: grafana
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      name: grafana-agent-traces
+  template:
+    metadata:
+      labels:
+        name: grafana-agent-traces
+    spec:
+      hostNetwork: true
+      containers:
+      - args:
+        - -config.file=/etc/agent/agent.yaml
+        - -server.http.address=0.0.0.0:9999
+        command:
+        - /bin/agent
+        env:
+        - name: HOSTNAME
+          value: localhost
+        image: grafana/agent:v0.27.0
+        imagePullPolicy: IfNotPresent
+        name: grafana-agent-traces
+        securityContext:
+          privileged: true
+        ports:
+        - containerPort: 9999
+          name: http-metrics
+        - containerPort: 6831
+          name: thrift-compact
+          protocol: UDP
+        - containerPort: 6832
+          name: thrift-binary
+          protocol: UDP
+        - containerPort: 14268
+          name: thrift-http
+          protocol: TCP
+        - containerPort: 14250
+          name: thrift-grpc
+          protocol: TCP
+        - containerPort: 9411
+          name: zipkin
+          protocol: TCP
+        - containerPort: 4317
+          name: otlp
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /etc/agent
+          name: grafana-agent-traces
+        - mountPath: /tmp
+          name: tmp
+      serviceAccountName: grafana-agent-traces
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - configMap:
+          name: grafana-agent-traces
+        name: grafana-agent-traces

@@ -3,17 +3,16 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: otelcol
-  namespace: kepler
   labels:
     app.kubernetes.io/component: exporter
     app.kubernetes.io/name: kepler-exporter
 data:
   otel-collector-config: |
     receivers:
-      otlp:
-        protocols:
-          grpc:
-            max_recv_msg_size_mib: 999999999
+      #otlp:
+      #  protocols:
+      #    grpc:
+      #      max_recv_msg_size_mib: 999999999
       prometheus:
         config:
           scrape_configs:
@@ -40,7 +39,7 @@ data:
           receivers: [prometheus]
           processors: [batch]
           exporters: [logging,prometheusremotewrite]
-        traces:
-          receivers: [otlp]
-          processors: [batch]
-          exporters: [logging]
+        #traces:
+        #  receivers: [otlp]
+        #  processors: [batch]
+        #  exporters: [logging]

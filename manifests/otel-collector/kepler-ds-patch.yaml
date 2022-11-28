@@ -24,14 +24,14 @@ spec:
         securityContext:
           privileged: true
         ports:
-        - containerPort: 4317 # Default endpoint for OpenTelemetry receiver.
-        - containerPort: 14268 # Default endpoint for Jaeger receiver.
+        #- containerPort: 4317 # Default endpoint for OpenTelemetry receiver.
+        #- containerPort: 14268 # Default endpoint for Jaeger receiver.
         - containerPort: 8888  # Default endpoint for querying metrics.
-        env:
-        - name: JAEGER_AGENT_HOST
-          valueFrom:
-            fieldRef:
-              fieldPath: status.hostIP
+        #env:
+        #- name: JAEGER_AGENT_HOST
+        #  valueFrom:
+        #    fieldRef:
+        #      fieldPath: status.hostIP
         volumeMounts:
         - mountPath: /conf
           name: otel-collector-config

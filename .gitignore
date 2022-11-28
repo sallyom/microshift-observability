@@ -1,2 +1,3 @@
 manifests/opentelemetry-operator/private-*
 manifests/otel-collector/private-*
+manifests/grafana-agent/private-*
