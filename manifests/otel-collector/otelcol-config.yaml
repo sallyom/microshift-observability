@@ -21,6 +21,10 @@ data:
             static_configs:
              - targets: ['0.0.0.0:9102']
     processors:
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 2000
+        spike_limit_mib: 400
       batch:
     exporters:
       logging:
