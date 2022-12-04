@@ -5,8 +5,9 @@ Then, view the following observability scenarios:
 
 1. [Kubernetes Metrics Server](manifests/metrics-server/README.md)
 2. [OpenTelemetry Collector](manifests/otel-collector/README.md)
-3. [Jaeger Deployment](manifests/jaeger/jaeger.md)
-4. [Grafana Agent](manifests/grafana-agent/README.md)
+3. [Sample Application](manifests/sample-app/README.md)
+4. [Jaeger Deployment](manifests/jaeger/jaeger.md)
+5. [Grafana Agent](manifests/grafana-agent/README.md)
 
 ### MicroShift deployment in KVM
 
