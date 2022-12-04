@@ -9,6 +9,21 @@ Then, view the following observability scenarios:
 4. [Jaeger Deployment](manifests/jaeger/jaeger.md)
 5. [Grafana Agent](manifests/grafana-agent/README.md)
 
+### Screenshots
+
+Data sent from local MicroShift virtual machine to Grafana Cloud
+
+![Kepler Dashboard](images/kepler-microshift.png)
+
+Prometheus metrics from MicroShift virtual machine 
+
+![MicroShift metrics](images/microshift-metrics.png)
+
+Jaeger UI from local machine
+
+![Jaeger traces exported from virtual machine](images/localjaeger.png)
+
+
 ### MicroShift deployment in KVM
 
 Follow the Microshift documentation for bootstrapping a MicroShift instance running in a RHEL 8.7 Virtual Machine. Complete all prerequisites.
