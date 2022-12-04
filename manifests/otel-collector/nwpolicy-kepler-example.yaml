@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-to-otel-collector
+  namespace: kepler
+spec:
+  podSelector: 
+    matchLabels:
+      app.kubernetes.io/component: exporter
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: otelcol
+      podSelector:
+        matchLabels:
+          otel: collect

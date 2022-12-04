@@ -1,5 +1,6 @@
 #### Create Grafana Agent traces exporter
 
+A grafana agent can be deployed to send trace data to Grafana Cloud.
 Edit `manifests/grafana-agent/grafana-agent-config.yaml` to configure a grafana agent.
 Then create a namespace to deploy the grafana agent apply the yaml files.
 This example configures a grafana agent to send trace data to GrafanaCloud Tempo Data Source.

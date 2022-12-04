@@ -1,0 +1,7 @@
+commonLabels:
+  name: otel-collector
+resources:
+- 00-scc.yaml
+- 01-cabundle-cm.yaml
+- 02-otelcol-config.yaml
+- 03-deployment.yaml

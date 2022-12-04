@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sample
+  namespace: sample-app
+---
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sample-app
+  name: sample-app
+  namespace: sample-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-app
+  template:
+    metadata:
+      labels:
+        app: sample-app
+    spec:
+      volumes:
+      - name: sample-app-tls
+        secret:
+          secretName: sample-app-tls
+          defaultMode: 420
+      hostNetwork: true
+      serviceAccount: sample
+      containers:
+      - image: quay.io/sallyom/otel-ex:local
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          privileged: true
+        name: sample-app
+        env:
+        - name: OTELCOL_ADDRESS
+          # This is configured to connect to OpenTelemetry Collector on the VM host network
+          # This is necessary because the collector is also receiving from CRI-O.
+          value: "0.0.0.0:4317"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 200Mi
+          limits:
+            cpu: 200m
+            memory: 400Mi
+        volumeMounts:
+        - name: sample-app-tls
+          mountPath: /etc/tls-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: sample-app
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: sample-app-tls
+  name: sample-app
+  namespace: sample-app
+spec:
+  ports:
+  - name: web
+    port: 80
+    targetPort: 8080
+    protocol: TCP
+  selector:
+    app: sample-app
+  type: ClusterIP

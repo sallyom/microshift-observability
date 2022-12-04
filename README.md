@@ -1,4 +1,12 @@
-## Kepler on MicroShift local VM to GrafanaCloud
+## Observability in MicroShift Virtual Machine
+
+This repository is a collection of manifests to enable observability in MicroShift. To get started, follow this README to deploy a VM and MicroShift.
+Then, view the following observability scenarios:
+
+1. [Kubernetes Metrics Server](manifests/metrics-server/README.md)
+2. [OpenTelemetry Collector](manifests/otel-collector/README.md)
+3. [Jaeger Deployment](manifests/jaeger/jaeger.md)
+4. [Grafana Agent](manifests/grafana-agent/README.md)
 
 ### MicroShift deployment in KVM
 
@@ -33,7 +41,8 @@ virt-install \
 To configure the machine, follow the below steps.
 Use the IP address and `redhat:redhat` to access the virtual machine.
 First, scp the pull-secret (follow above documentation) and the configure script over to the VM.
-Then, ssh into the virtual machine.
+Then, ssh into the virtual machine and run the configure script. This script configures RH subscription manager
+and places the pull-secret where CRI-O expects it at `/etc/crio/openshift-pull-secret` 
 
 ```bash
 sudo virsh domifaddr microshift-starter # note the IP address 
@@ -46,12 +55,9 @@ ssh redhat@${IPADDR}
 
 ### Execute below commands from within the virtual machine
 
-Configure cgroups-v2 and run the configuration script.
-
 ```bash
 ./configure-microshift-vm.sh ~/.pull-secret.json
-# script will ask for your RH account creds for subscription, then will run unattended
-# reboot VM and ssh back in
+# script will ask for your RH account creds for subscription
 ```
 
 #### Start MicroShift service
@@ -63,66 +69,3 @@ sudo cp /var/lib/microshift/resources/kubeadmin/kubeconfig ~/.kube/config
 sudo chown -R redhat:redhat ~/.kube
 oc get pods -A # all pods should soon be running
 ```
-
-#### Kepler Deployment
-
-```bash
-git clone https://github.com/sustainable-computing-io/kepler.git
-cd kepler
-```
-
-Edit the daemonset yaml at `manifests/openshift/kepler/01-kepler-install.yaml` like so.
-
-```bash
-      hostNetwork: true
-      containers:
-      - name: kepler-exporter
-and
-        env:
-        - name: NODE_NAME
-          value: localhost
-```
-
-Apply the kepler manifests.
-
-```bash
-oc apply --kustomize $(pwd)/manifests/openshift/kepler
-# Check that kepler pod is up and running before proceeding
-```
-
-#### Create OpenTelemetry Collector configmaps
-
-Edit `manifests/otel-collector/otelcol-config.yaml` to configure the correct receivers, exporters, and pipelines.
-Then apply the configmap yaml files.
-This example configures a `prometheusremotewrite` exporter to send data to GrafanaCloud.
-View [this Grafana Engineering post](https://grafana.com/blog/2022/05/10/how-to-collect-prometheus-metrics-with-the-opentelemetry-collector-and-grafana/) for more details.
-
-```bash
-oc apply -f manifests/otel-collector/cabundle-cm.yaml -n kepler
-oc apply -f manifests/otel-collector/otelcol-config.yaml -n kepler
-```
-
-#### Patch kepler-exporter service to add otel-collector ports
-
-```bash
-oc patch service/kepler-exporter -n kepler --patch-file manifests/otel-collector/kepler-svc-patch.yaml
-```
-
-#### Patch kepler-exporter daemonset to add otel-collector container
-
-```bash
-oc patch daemonset/kepler-exporter -n kepler --patch-file manifests/otel-collector/kepler-ds-patch.yaml
-```
-
-An opentelemetry-collector container should now be running with kepler-exporter daemonset. View the logs of the kepler-exporter pod to
-ensure the pod is collecting metrics from the kepler-exporter and sending to opentelemetrycollector.
-
-### Import and view grafana dashboard
-
-Follow the Grafana documentation to import the Kepler-Exporter dashboard.
-
-[Kepler dashboard to import](https://github.com/sustainable-computing-io/kepler/blob/main/grafana-dashboards/Kepler-Exporter.json)
-
-Hopefully, you'll see something like this!
-
-![You might see something like this!](./images/kepler-microshift.png "MicroShift, Kepler, and OpenTelemetry")

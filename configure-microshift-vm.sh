@@ -30,16 +30,18 @@ if ! sudo subscription-manager status >& /dev/null ; then
 fi
 
 sudo dnf update -y
-sudo dnf install -y kernel-devel
 sudo dnf clean all -y
 # sudo systemctl enable --now cockpit.socket
 
 sudo cp -f ${OCP_PULL_SECRET} /etc/crio/openshift-pull-secret
 sudo chmod 600                /etc/crio/openshift-pull-secret
 
-# enable cgroupsv2
-sudo grubby --update-kernel=ALL --args="systemd.unified_cgroup_hierarchy=1"
-
-echo ""
-echo "Kepler must run with cgroups-v2 when running in a virtual machine. Roboot machine before starting MicroShift."
-echo "Done"
+# enable crio to export opentelemetry trace data
+sudo mkdir /etc/crio/crio.conf.d
+cat <<EOF > otel.conf
+[crio.tracing]
+tracing_sampling_rate_per_million=999999
+enable_tracing=true
+EOF
+sudo mv otel.conf /etc/crio/crio.conf.d/
+sudo systemctl daemon-reload
