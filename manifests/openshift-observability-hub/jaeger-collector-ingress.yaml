@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jaeger-microshift
+  namespace: monitoring
+  annotations:
+    route.openshift.io/termination: "reencrypt"
+    route.openshift.io/destination-ca-certificate-secret: secret-ca-cert
+spec:
+  rules:
+  - host: jaeger-microshift-collector.monitoring.apps.ci-ln-q4w5hfk-76ef8.origin-ci-int-aws.dev.rhcloud.com
+    http:
+      paths:
+      - path: ''
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: myjaeger-collector
+            port:
+              number: 14250
+  tls:
+  - secretName: jaeger-collector-tls-secret
+    hosts:
+      - jaeger-microshift-collector.monitoring.apps.ci-ln-q4w5hfk-76ef8.origin-ci-int-aws.dev.rhcloud.com

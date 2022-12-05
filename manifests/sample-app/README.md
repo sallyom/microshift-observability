@@ -20,4 +20,4 @@ Then generate spans by visiting `https://localhost:8888/hello`, `https://localho
 
 
 To view the traces, deploy an [OpenTelemetry Collector](../otel-collector/README.md) and either a [Grafana Agent](../grafana-agent/README.md)
-or [Jaeger](../jaeger/jaeger.md).
+or [Jaeger](../jaeger/jaeger.md). You may also require a [networkpolicy](networkpolicy.yaml).
