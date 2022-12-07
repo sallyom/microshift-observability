@@ -41,20 +41,20 @@ spec:
 
     exporters:
       logging:
-        #loglevel: debug
+        verbosity: detailed
       prometheusremotewrite:
         endpoint: https://<USERNAME>:<PASSWORD>@<PROMENDPOINTURL>
         # for me looks something like: 
         # endpoint: https://643999:eyJrIjoixxxxxxxxxxxxxxxxxxxxxxOH0=@prometheus-prod-10-prod-us-central-0.grafana.net/api/prom/push
       jaeger:
-        endpoint: "jaeger-service.jaeger-ns.svc:14250" # Jaeger service URL
+        endpoint: "localhost:14250" # Jaeger service port-forwarded from remote (local) machine
         tls:
           insecure: true
 
     service:
       pipelines:
         metrics:
-          receivers: [prometheus]
+          receivers: [otlp,prometheus]
           processors: [batch]
           exporters: [logging,prometheusremotewrite]
         traces:

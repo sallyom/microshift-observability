@@ -7,6 +7,7 @@ Then, view the following observability scenarios:
 2. [OpenTelemetry Collector](manifests/otel-collector/README.md)
 3. [Sample Application](manifests/sample-app/README.md)
 4. [Jaeger Deployment](manifests/jaeger/jaeger.md)
+5. [Send Telemtry to OpenShift Cluster](manifests/openshift-observability-hub/README.md)
 5. [Grafana Agent](manifests/grafana-agent/README.md)
 
 ### Screenshots

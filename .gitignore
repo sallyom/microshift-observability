@@ -2,3 +2,5 @@ manifests/otel-collector/private-*
 manifests/grafana-agent/private-*
 manifests/sample-app/kepler/private-*
 manifests/sample-app/opentelemetry-operator/private-*
+*ca.crt
+**/private*

@@ -1,17 +1,5 @@
 apiVersion: jaegertracing.io/v1
 kind: Jaeger
 metadata:
-  name: jaeger-microshift
-spec:
-  query:
-    options:
-      query.bearer-token-propagation: true
-  ingress:
-    openshift:
-      sar: '{"namespace": "monitoring", "resource": "pods", "verb": "get"}'
-      delegateUrls: '{"/":{"namespace": "monitoring", "resource": "pods", "verb": "get"}}'
-    options:
-      pass-access-token: true
-      pass-user-bearer-token: true
-      scope: "user:info user:check-access"
-      pass-basic-auth: false
+  name: oteljaeger
+  namespace: monitoring
