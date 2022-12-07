@@ -10,6 +10,12 @@ Then, view the following observability scenarios:
 5. [Send Telemtry to OpenShift Cluster](manifests/openshift-observability-hub/README.md)
 5. [Grafana Agent](manifests/grafana-agent/README.md)
 
+### CPU/Memory from kube-metrics-server
+
+`kubectl top pods -A`
+
+![Utilization](images/top-pods.png)
+
 ### Screenshots
 
 Data sent from local MicroShift virtual machine to Grafana Cloud
