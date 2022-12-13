@@ -25,4 +25,4 @@ volumes:
   - emptyDir
   - hostPath
 users:
-  - system:serviceaccount:sample-app:sample # serviceaccount:namespace:sa
+  - system:serviceaccount:sample-app:sample-app # serviceaccount:namespace:sa

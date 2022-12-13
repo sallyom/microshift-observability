@@ -20,7 +20,7 @@ data:
             scrape_interval: 5s
             static_configs:
              # any target listed must have a networkpolicy allowing opentelemetry collector access to metrics
-            - targets: ['10.42.0.118:9102'] # kepler-exporter endpoint in -n kepler
+            - targets: ['10.42.0.118:9102'] # application metrics endpoint
     processors:
       memory_limiter:
         check_interval: 1s
@@ -47,7 +47,7 @@ data:
         metrics:
           receivers: [prometheus]
           processors: [batch]
-          exporters: [prometheusremotewrite]
+          exporters: [prometheusremotewrite, logging]
         traces:
           receivers: [otlp]
           processors: [batch]

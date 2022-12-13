@@ -1,9 +1,8 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: sample
+  name: sample-app
   namespace: sample-app
----
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -37,9 +36,9 @@ spec:
         name: sample-app
         env:
         - name: OTELCOL_ADDRESS
-          # This is configured to connect to OpenTelemetry Collector on the VM host network
+          # This is configured to connect to OpenTelemetry Collector on the VM ip address
           # This is necessary because the collector is also receiving from CRI-O.
-          value: "0.0.0.0:4317"
+          value: "<VM_IP_ADDRESS>:4317"
         resources:
           requests:
             cpu: 100m

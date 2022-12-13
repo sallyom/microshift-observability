@@ -3,9 +3,9 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: otelcol
-  namespace: otelcol
   labels:
-    otel: collect
+    app.kubernetes.io/component: exporter
+    app.kubernetes.io/name: kepler-exporter
 data:
   otel-collector-config: |
     extensions:
@@ -20,13 +20,14 @@ data:
         protocols:
           http:
           grpc:
+            max_recv_msg_size_mib: 999999999
       prometheus:
         config:
           scrape_configs:
           - job_name: 'otel-collector'
             scrape_interval: 5s
             static_configs:
-            - targets: ['10.42.0.118:9102'] # instrumented app endpoint
+             - targets: ['<KEPLER_CLUSTER_IP>:9102']
     processors:
       memory_limiter:
         check_interval: 1s
@@ -40,15 +41,19 @@ data:
           authenticator: basicauth/client
         tls:
           insecure: false
+          # from client-ca configmap
+          # extract the root CA from OCP and scp to MicroShift
+          # oc extract cm/kube-root-ca.crt -n openshift-config --confirm
+          # (in MicroShift) oc create configmap -n otelcol client-ca --from-file ca.crt
           ca_file: /ca/client-ca
       logging:
-        verbosity: detailed
+        loglevel: debug
       prometheusremotewrite:
         endpoint: https://<USERNAME>:<PASSWORD>@<PROMENDPOINTURL>
-        # for me looks something like: 
-        # endpoint: https://64777:eyJrIjoxxxxxxxxxxxxxxx@prometheus-prod-10-prod-us-central-0.grafana.net/api/prom/push
+        # for me looks something like:
+        #endpoint: https://64777:eyJrIjoxxxxxxxxxxxxxxx@prometheus-prod-10-prod-us-central-0.grafana.net/api/prom/push
       jaeger:
-        endpoint: "localhost:14250" # Jaeger service running on local machine,port-forwarded
+        endpoint: "0.0.0.0:14250" # Jaeger service, forwarded from host
         tls:
           insecure: true
     service:
@@ -58,11 +63,12 @@ data:
           level: detailed
           address: 0.0.0.0:9999
       pipelines:
+        extensions: [basicauth/client]
         metrics:
           receivers: [prometheus]
           processors: [batch]
-          exporters: [prometheusremotewrite,otlphttp]
+          exporters: [logging,prometheusremotewrite,otlphttp]
         traces:
           receivers: [otlp]
           processors: [batch]
-          exporters: [jaeger,otlphttp]
+          exporters: [logging,jaeger,otlphttp]

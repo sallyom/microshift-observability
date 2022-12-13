@@ -37,7 +37,7 @@ systemctl restart crio # or systemctl enable crio --now
 systemctl status crio # should be running
 ```
 
-You might also deploy the [sample application](../sample-app/README.md). The sample application is instrumented to generate
+You might also deploy the [sample application](../sample-instrumented-applications/sample-tracing-app/README.md). The sample application is instrumented to generate
 OTLP trace data.
 CRI-O and the sample-app are now exporting trace data to Jaeger running on the local machine.
 You should now see spans in the jaeger dashboard at `localhost:16686`,

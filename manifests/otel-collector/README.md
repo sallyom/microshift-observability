@@ -9,7 +9,7 @@ In this example, the collector is configured to receive OTLP and Prometheus data
 An opentelemetry collector deployment will be created in namespace `otelcol`. The Jaeger deployment in this example is running external to the VM
 on the host machine. Refer to [the Jaeger deployment document](../jaeger/jaeger.md).
 
-Deploy the OpenTelemetry Collector:
+Deploy the OpenTelemetry Collector in MicroShift:
 
 ```bash
 oc create ns otelcol
@@ -18,9 +18,6 @@ oc apply -n otelcol -k manifests/otel-collector/
 
 An opentelemetry-collector pod should now be running in `-n otelcol`. View the logs of the opentelemetry collector pod
 to ensure data is being received and exported as expected.
-
-> **Note** 
-> NetworkPolicies allow connection to OpenTelemetry Collector. For any application, create a networkpolicy to allow OpenTelemetryCollector access to its namespace & services. Refer to the example [networkpolicy manifest](nwpolicy-kepler-example.yaml).
 
 #### Send Metrics to remote Prometheus and Grafana
 

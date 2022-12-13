@@ -1,8 +1,7 @@
-# scc for grafana-agent
 kind: SecurityContextConstraints
 apiVersion: security.openshift.io/v1
 metadata:
-  name: grafana-scc
+  name: kube-metrics-scc
 # To allow running privilegedContainers
 allowPrivilegedContainer: true
 allowHostDirVolumePlugin: true
