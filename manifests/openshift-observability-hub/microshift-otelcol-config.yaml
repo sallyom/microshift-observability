@@ -40,7 +40,7 @@ data:
           authenticator: basicauth/client
         tls:
           insecure: false
-          ca_file: /ca/client-ca
+          ca_file: /conf/ca/ca.crt
       logging:
         verbosity: detailed
       prometheusremotewrite:
