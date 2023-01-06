@@ -2,5 +2,8 @@ manifests/otel-collector/private-*
 manifests/grafana-agent/private-*
 manifests/sample-instrumented-applications/kepler/private-*
 manifests/sample-instrumented-applications/kepler/opentelemetry-operator/private-*
+**/edge-token
+**/thanos-receive-url
+**/ocp-otelcol-url
 *ca.crt
 **/private*

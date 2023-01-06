@@ -19,15 +19,15 @@ Then, view the following observability scenarios:
 
 ### Screenshots
 
-Data sent from local MicroShift virtual machine to Grafana Cloud
+Data sent from local MicroShift virtual machine to OpenShift grafana
 
-![Kepler Dashboard](images/kepler-microshift.png)
+![Kepler Dashboard](images/kepler-dashboard-microshift-in-ocp.png)
 
 Prometheus metrics from MicroShift virtual machine 
 
 ![MicroShift metrics](images/microshift-metrics.png)
 
-Jaeger UI from local machine
+Jaeger UI from OpenShift showing traces from MicroShift VM
 
 ![Jaeger traces exported from virtual machine](images/localjaeger.png)
 

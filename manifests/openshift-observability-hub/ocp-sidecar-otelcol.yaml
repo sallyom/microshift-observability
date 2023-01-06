@@ -7,22 +7,16 @@ metadata:
   annotations:
     service.beta.openshift.io/inject-cabundle: "true"
   name: otelcol-cabundle
-  namespace: openshift-monitoring
+  namespace: thanos
 ---
 apiVersion: opentelemetry.io/v1alpha1
 kind: OpenTelemetryCollector
 metadata:
   name: otelcol
-  namespace: openshift-monitoring
+  namespace: thanos
 spec:
   image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.64.1
   config: |
-    extensions:
-      basicauth/server:
-        htpasswd:
-          inline: |
-            sally:password1234
-
     receivers:
       otlp:
         protocols:
@@ -36,12 +30,11 @@ spec:
         verbosity: detailed
       jaeger:
         # monitoring is the name of the namespace, oteljaeger is jaeger name, modify accordingly
-        endpoint: oteljaeger-collector-headless.monitoring.svc:14250
+        endpoint: oteljaeger-collector-headless.thanos.svc:14250
         tls:
           ca_file: "/etc/pki/ca-trust/source/service-ca/service-ca.crt"
 
     service:
-      extensions: [basicauth/server]
       pipelines:
         metrics:
           receivers: [otlp]

@@ -2,4 +2,4 @@ apiVersion: jaegertracing.io/v1
 kind: Jaeger
 metadata:
   name: oteljaeger
-  namespace: monitoring
+  namespace: thanos

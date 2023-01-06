@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: thanos-querier
+  namespace: thanos
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: thanos-receive
+  namespace: thanos
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: edge
+  namespace: thanos

@@ -2,11 +2,11 @@ kind: Route
 apiVersion: route.openshift.io/v1
 metadata:
   name: otelcol
-  namespace: monitoring
+  namespace: thanos
 spec:
   to:
     kind: Service
-    name: otelcol-collector
+    name: thanos-receive
     weight: 100
   port:
     targetPort: 4318

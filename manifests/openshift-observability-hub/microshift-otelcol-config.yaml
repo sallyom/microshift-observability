@@ -9,12 +9,8 @@ metadata:
 data:
   otel-collector-config: |
     extensions:
-      # don't use in production
-      # using here bc bearertokenauth isn't working
-      basicauth/client:
-        client_auth:
-          username: sally
-          password: password1234
+      bearertokenauth:
+        filename: /conf/edge-token/edge-token
     receivers:
       otlp:
         protocols:
@@ -26,7 +22,7 @@ data:
           - job_name: 'otel-collector'
             scrape_interval: 5s
             static_configs:
-            - targets: ['10.42.0.118:9102'] # instrumented app endpoint
+            - targets: ['192.168.122.96:9102'] # instrumented app endpoint
     processors:
       memory_limiter:
         check_interval: 1s
@@ -35,34 +31,31 @@ data:
       batch:
     exporters:
       otlphttp:
-        endpoint: https://otlphttp.apps.ci-ln-rx38hi2-76ef8.aws-2.ci.openshift.org # otel-collector service route from OCP, port 4318
+        # endpoint: https://OCP_ROUTE_OTELCOL
+        endpoint: https://otelcol-thanos.apps.ci-ln-w3ydddb-76ef8.origin-ci-int-aws.dev.rhcloud.com # otel-collector service route from OCP, port 4318
         auth:
-          authenticator: basicauth/client
+          authenticator: bearertokenauth
         tls:
           insecure: false
           ca_file: /conf/ca/ca.crt
       logging:
         verbosity: detailed
-      prometheusremotewrite:
-        endpoint: https://<USERNAME>:<PASSWORD>@<PROMENDPOINTURL>
-        # for me looks something like: 
-        # endpoint: https://64777:eyJrIjoxxxxxxxxxxxxxxx@prometheus-prod-10-prod-us-central-0.grafana.net/api/prom/push
-      jaeger:
-        endpoint: "localhost:14250" # Jaeger service running on local machine,port-forwarded
+      prometheusremotewrite/ocp:
+        # endpoint: https://OCP_ROUTE_THANOS_RECEIVE/api/v1/receive
+        endpoint: https://thanos-receive-thanos.apps.ci-ln-w3ydddb-76ef8.origin-ci-int-aws.dev.rhcloud.com/api/v1/receive
+        auth:
+          authenticator: bearertokenauth
         tls:
-          insecure: true
+          insecure: false
+          ca_file: /conf/ca/ca.crt
     service:
-      extensions: [basicauth/client]
-      telemetry:
-        metrics:
-          level: detailed
-          address: 0.0.0.0:9999
+      extensions: [bearertokenauth]
       pipelines:
         metrics:
           receivers: [prometheus]
           processors: [batch]
-          exporters: [prometheusremotewrite,otlphttp]
+          exporters: [prometheusremotewrite/ocp,logging]
         traces:
           receivers: [otlp]
           processors: [batch]
-          exporters: [jaeger,otlphttp]
+          exporters: [logging,otlphttp]
