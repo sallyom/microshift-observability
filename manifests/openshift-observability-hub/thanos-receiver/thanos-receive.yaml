@@ -53,7 +53,7 @@ spec:
         - --grpc-address=0.0.0.0:19891
         - --http-address=0.0.0.0:18091
         - --remote-write.address=0.0.0.0:19291
-        - --objstore.config-file=/etc/prometheus/store-s3-secret.yaml
+        #- --objstore.config-file=/etc/prometheus/store-s3-secret.yaml
         ports:
         - name: otlp
           containerPort: 4318
@@ -62,15 +62,15 @@ spec:
         - name: grpc
           containerPort: 19891
         volumeMounts:
-        - name: s3-store-credentials
-          mountPath: /etc/prometheus/
-          readOnly: true
+        #- name: s3-store-credentials
+        #  mountPath: /etc/prometheus/
+        #  readOnly: true
         - name: remote-write-data
           mountPath: /data/remote-write-receive-data
       volumes:
-      - name: s3-store-credentials
-        secret:
-          secretName: store-s3-credentials
+      #- name: s3-store-credentials
+      #  secret:
+      #    secretName: store-s3-credentials
       - name: remote-write-data
         emptyDir: {}
       - name: secret-thanos-receive-tls
