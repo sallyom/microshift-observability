@@ -1,0 +1,9 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: edge-observability
+  description: examples for MicroShift, Thanos, & OpenTelemetry
+spec:
+  type: library
+  lifecycle: production
+  owner: sallyom
