@@ -4,12 +4,13 @@ This repository is a collection of manifests to enable observability in MicroShi
 Then, view the following observability scenarios:
 
 1. [Kubernetes Metrics Server](manifests/metrics-server/README.md)
-2. [OpenTelemetry Collector](manifests/otel-collector/README.md)
+2. [OpenTelemetry Collector Operator & Collector](manifests/opentelemetry-collector-operator/README.md)
 3. [Sample Application with Traces](manifests/sample-instrumented-applications/sample-tracing-app/README.md)
 3. [Sample Application with Metrics](manifests/sample-instrumented-applications/kepler/README.md)
 4. [Jaeger Deployment](manifests/jaeger/jaeger.md)
 5. [Send Telemetry to OpenShift Cluster](manifests/openshift-observability-hub/README.md)
 5. [Grafana Agent](manifests/grafana-agent/README.md)
+2. [OpenTelemetry Collector No Operator](manifests/otel-collector/README.md)
 
 ### CPU/Memory from kube-metrics-server
 

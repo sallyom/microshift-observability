@@ -46,8 +46,8 @@ to access the application and generate traffic with telemetry data.
 **run from local terminal tabs, not VM**
 
 ```bash
-ssh -L 30489:192.168.122.96:30489 redhat@192.168.122.96 -N
-ssh -L 31317:192.168.122.96:31317 redhat@192.168.122.96 -N
+ssh -L 30357:192.168.122.15:30357 redhat@192.168.122.15 -N
+ssh -L 30489:192.168.122.15:30489 redhat@192.168.122.15 -N
 ```
 
 **SSH back into MicroShift VM**
@@ -59,7 +59,7 @@ oc apply -n sample-app -f microshift-otelcol-deployment.yaml
 oc get pods -n sample-app # look for running otelcollector pod
 ```
 
-Open `localhost:31317` from local browser to fight! You should see something like this:
+Open `localhost:30357` from local browser to fight! You should see something like this:
 
 ![Welcome to Super Heroes Fight!](./ui-super-heroes-fight.png)
 

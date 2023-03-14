@@ -93,6 +93,11 @@ scp ca.crt   redhat@<MICROSHIFT_VM>:
 
 ### Edge MicroShift cluster
 
+If running a standalone deployment of the OpenTelemetry Collector in MicroShift,
+follow the below steps in the MicroShift machine. If running the
+`OpenTelemetry Operator` in MicroShift, follow the steps in the
+[opentelemetry-collector-operator](../opentelemetry-collector-operator/README.md) document.
+
 #### Configure Authentication for Thanos Receive
 
 Run the following from `edge MicroShift cluster otelcol namespace`, where OpenTelemetryCollector is running & collecting data
@@ -114,7 +119,7 @@ that `github.com/sallyom/microshift-observability` is cloned in the VM.
 ```bash
 cd microshift-observability/manifests/openshift-observability-hub
 
-# update deployment with client-ca and edge-token configmap volumes
+# update collector deployment with client-ca and edge-token configmap volumes
 oc apply -f microshift-otel-collector-deployment.yaml 
 ```
 
