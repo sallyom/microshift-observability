@@ -1,0 +1,5 @@
+{
+   "Description": "edgeushift.qcow2",
+   "Format": "raw",
+   "Url": "s3://somaltest/edgeushift.raw"
+}

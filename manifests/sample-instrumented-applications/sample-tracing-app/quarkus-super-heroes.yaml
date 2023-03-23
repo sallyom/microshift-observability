@@ -1,5 +1,11 @@
 ---
 apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: otelcol-collector
+  namespace: sample-app
+---
+apiVersion: v1
 kind: ConfigMap
 metadata:
   labels:
