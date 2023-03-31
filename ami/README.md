@@ -7,6 +7,8 @@ Assumes
 2. The following roles are created in an AWS account. View trust-policy.json, role-policy.json files in this directory.
 3. Access to an s3 bucket in AWS
 
+_image conversion commands heavily borrowed from [rapidsdb.com](https://docs.rapidsdb.com/development/import-qcow2.html)_ 
+
 ```bash
 aws iam create-role --role-name vmimport --assume-role-policy-document file://trust-policy.json
 aws iam put-role-policy --role-name vmimport --policy-name vmimport --policy-document file://role-policy.json

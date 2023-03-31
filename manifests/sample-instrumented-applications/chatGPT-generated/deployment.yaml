@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: generate-data
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: generate-data
+  template:
+    metadata:
+      labels:
+        app: generate-data
+    spec:
+      containers:
+      - name: generate-data
+        image: quay.io/sallyom/otel-generate:latest
+        ports:
+        - containerPort: 8080
+        - containerPort: 9090
+        - containerPort: 4317
+        command: ["python3", "/app/program.py"]
+        env:
+        - name: OTEL_RESOURCE_ATTRIBUTES
+          value: "service.name=generate-data"
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "localhost:4317"
+        - name: OTEL_METRICS_EXPORTER
+          value: "prometheus"

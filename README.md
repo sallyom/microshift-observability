@@ -11,6 +11,8 @@ Then, view the following observability scenarios:
 5. [Send Telemetry to OpenShift Cluster](manifests/openshift-observability-hub/README.md)
 5. [Grafana Agent](manifests/grafana-agent/README.md)
 2. [OpenTelemetry Collector No Operator](manifests/otel-collector/README.md)
+2. [Create Amazon Machine Image for RHEL Device Edge OS](ami/README.md)
+2. [Sample Application with Metrics, Traces, and Logs](manifests/sample-instrumented-applications/chatGPT-generated/README.md)
 
 ### CPU/Memory from kube-metrics-server
 
