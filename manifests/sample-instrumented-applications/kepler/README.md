@@ -1,10 +1,13 @@
-## Kepler on MicroShift local VM to GrafanaCloud
+## Kepler on MicroShift in a RHEL based distribution
 
-This assumes MicroShift is running in a virtual machine.
-SCP the configure script over to the VM.
-Then, ssh into the virtual machine.
+This assumes MicroShift is running in a RHEL based machine
+and the OpenTelemetry Operator is deployed.
+SSH into the virtual machine.
+
+Configure MicroShift and Kepler
 
 ```bash
+# If running in KVM, or obtain the ip address otherwise
 sudo virsh domifaddr microshift-starter # note the IP address 
 export IP_ADDR=<ip address from above>
 # password is 'redhat' for below cmds
@@ -15,6 +18,9 @@ ssh redhat@${IPADDR}
 ### Execute below commands from within the virtual machine
 
 Configure cgroups-v2 and run the configuration script.
+The following script will not work if running in rpm-ostree based OS such as RHEL Device Edge.
+With rpm-ostree based systems, be sure your machine is running with cgroupsv2 enabled,
+and also that the package `kernel-devel-$(uname -r)` is installed.
 
 ```bash
 ./configure-microshift-vm-kepler.sh ~/.pull-secret.json cgroupsv2=true
@@ -46,7 +52,7 @@ Edit the daemonset yaml at `manifests/config/exporter/exporter.yaml` like so.
 
 ```bash
         env:
-        - name: NODE_NAME
+        - name: NODE_IP
           value: <VM IP_ADDRESS>
 ```
 
@@ -55,42 +61,27 @@ and remove the `[]` in the line `- patchesStrategicMerge: []`. Then, apply
 the kepler manifests.
 
 ```bash
-oc apply --kustomize $(pwd)/manifests/config/base
+oc create ns kepler
+oc apply -f $(pwd)/manifests/config/exporter/openshift-scc.yaml 
+oc apply --kustomize $(pwd)/manifests/config/base -n kepler
 # Check that kepler pod is up and running before proceeding
 ```
 
 #### Create OpenTelemetry Collector
 
 (cd back to this repository)
-Edit `manifests/otel-collector/02-otelcol-config.yaml` to configure the correct receivers, exporters, and pipelines.
-If already running, add a prometheus receiver target for the kepler-exporter endpoint.
+Edit [manifests/sample-instrumented-applications/kepler/microshift-otelcollector.yaml](./microshift-otelcollector.yaml) to configure the correct receivers, exporters, and pipelines.
+
+This example configures a `prometheusremotewrite` exporter to send data to thanos-receive running in OpenShift.
 
 ```bash
-    receivers:
-      prometheus:
-        config:
-          scrape_configs:
-            - job_name: 'otel-collector'
-              scrape_interval: 10s
-              static_configs:
-                - targets: ['<KEPLER-EXPORTER_ENDPOINT>:9102']
+oc apply -n kepler -f manifests/sample-instrumented-applications/kepler/microshift-otelcollector.yaml
+oc get pods -n kepler
+# an opentelemetry collector deployment should be triggered and a pod should be running.
+# examine the collector pod logs to verify data is being received and exported from kepler-exporter
 ```
 
-Then apply the configmap yaml files.
-This example configures a `prometheusremotewrite` exporter to send data to GrafanaCloud.
-View [this Grafana Engineering post](https://grafana.com/blog/2022/05/10/how-to-collect-prometheus-metrics-with-the-opentelemetry-collector-and-grafana/) for more details.
-
-
-If OpenTelemetry collector is not already running
-
-```bash
-oc create ns otelcol
-oc apply -n otelcol -k manifests/otel-collector/
-```
-
-An opentelemetry-collector pod should now be running in `-n otelcol`. View the logs of the kepler-exporter pod to
-ensure kepler metrics are being exported from the kepler-exporter. View the logs of the opentelemetry collector pod
-to ensure metrics are being collected from kepler-exporter.
+View [this Grafana Engineering post](https://grafana.com/blog/2022/05/10/how-to-collect-prometheus-metrics-with-the-opentelemetry-collector-and-grafana/) for details on how to send data to Grafana Cloud.
 
 ### Import and view grafana dashboard
 
