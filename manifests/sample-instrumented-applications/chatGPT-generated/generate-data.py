@@ -1,20 +1,13 @@
 import time
-
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
-
-from opentelemetry import metrics
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-
-
+from opentelemetry.sdk.trace.export import (
+    ConsoleSpanExporter,
+    SimpleSpanProcessor,
+)
+from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
-from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.exporter.prometheus import PrometheusMetricsExporter
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from flask import Flask
 
@@ -24,27 +17,27 @@ app = Flask(__name__)
 # Instrument the Flask app with OpenTelemetry
 FlaskInstrumentor().instrument_app(app)
 
-resource = Resource(attributes={
-    SERVICE_NAME: "otlpgenerate"
-})
+# Set up a tracer
+tracer_provider = TracerProvider()
+trace.set_tracer_provider(tracer_provider)
+span_processor = SimpleSpanProcessor(ConsoleSpanExporter())
+tracer_provider.add_span_processor(span_processor)
 
-traceprovider = TracerProvider(resource=resource)
-processor = BatchSpanProcessor(OTLPSpanExporter(endpoint="localhost:4317"))
-traceprovider.add_span_processor(processor)
-trace.set_tracer_provider(traceprovider)
-
-reader = PeriodicExportingMetricReader(
-    OTLPMetricExporter(endpoint="localhost:4317")
-)
-metricsprovider = MeterProvider(resource=resource, metric_readers=[reader])
-metrics.set_meter_provider(metricsprovider)
+# Set up a meter
+meter_provider = MeterProvider()
+metric_exporter = PrometheusMetricsExporter(endpoint="http://localhost:9090/metrics/")
+meter_provider.start_pipeline(meter_exporter=metric_exporter)
 
 # Define a counter metric
-counter = metricsprovider.get_meter(__name__).create_counter(
+counter = meter_provider.get_meter(__name__).create_counter(
     "requests",
     "Number of requests",
     "requests",
 )
+
+# Set up an OTLP trace exporter
+otlp_exporter = OTLPSpanExporter(endpoint="localhost:4317")
+span_processor.add_span_exporter(otlp_exporter)
 
 # Define a route for the Flask app
 @app.route("/")
@@ -53,7 +46,7 @@ def hello():
     counter.add(1)
 
     # Start a new span for the request
-    with traceprovider.get_tracer(__name__).start_as_current_span("hello"):
+    with tracer_provider.get_tracer(__name__).start_as_current_span("hello"):
         # Simulate a delay
         time.sleep(1)
 

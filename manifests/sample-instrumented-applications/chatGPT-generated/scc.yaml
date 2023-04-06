@@ -1,13 +1,7 @@
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: otelcol-collector
-  namespace: otelcol
----
 kind: SecurityContextConstraints
 apiVersion: security.openshift.io/v1
 metadata:
-  name: otelcol-scc
+  name: generate-scc
 # To allow running privilegedContainers
 allowPrivilegedContainer: true
 allowHostDirVolumePlugin: true
@@ -30,12 +24,5 @@ volumes:
   - emptyDir
   - hostPath
 users:
-  - system:serviceaccount:otelcol:otelcol-collector # serviceaccount:namespace:sa
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  annotations:
-    service.beta.openshift.io/inject-cabundle: "true"
-  name: otelcol-cabundle
-  namespace: otelcol
+  - system:serviceaccount:generate-data:generate-data # serviceaccount:namespace:sa
+

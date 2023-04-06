@@ -4,7 +4,7 @@ metadata:
   labels:
     otel: collect
   name: otelcol
-  namespace: kepler
+  namespace: generate-data
 spec:
   config: |
     extensions:
@@ -34,7 +34,7 @@ spec:
           - job_name: 'kepler'
             scrape_interval: 5s
             static_configs:
-            - targets: ['localhost:9102'] # instrumented app endpoint
+            - targets: ['localhost:9090'] # instrumented app endpoint
           - job_name: 'otel-collector'
             scrape_interval: 10s
             static_configs:
@@ -84,7 +84,7 @@ spec:
         metrics:
           receivers: [otlp,prometheus]
           processors: [memory_limiter,batch]
-          exporters: [prometheusremotewrite/ocp,otlphttp]
+          exporters: [otlphttp]
         traces:
           receivers: [otlp]
           processors: [memory_limiter,batch]
@@ -95,9 +95,9 @@ spec:
           exporters: [logging,otlphttp]
   image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.74.0
   mode: sidecar
+  serviceAccount: generate-data
   securityContext:
     privileged: true
-  serviceAccount: kepler-sa
   volumeMounts:
   - mountPath: /conf/edge-token
     name: edge-token
