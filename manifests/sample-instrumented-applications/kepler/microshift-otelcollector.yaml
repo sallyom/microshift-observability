@@ -8,20 +8,13 @@ metadata:
 spec:
   config: |
     extensions:
-      bearertokenauth:
-        filename: /conf/edge-token/edge-token
       basicauth/client:
         client_auth:
-          username: summit
-          password: demo-2450553304
+          username: xxxxx
+          password: xxxxx
       file_storage:
         directory: ./otc
         timeout: 10s
-      headers_setter:
-        headers:
-          - action: insert
-            key: X-Scope-OrgID
-            from_context: tenant_id
     receivers:
       otlp:
         protocols:
@@ -34,30 +27,22 @@ spec:
           - job_name: 'kepler'
             scrape_interval: 5s
             static_configs:
-            - targets: ['localhost:9102'] # instrumented app endpoint
+            - targets: ['0.0.0.0:9102'] # instrumented app endpoint
           - job_name: 'otel-collector'
             scrape_interval: 10s
             static_configs:
             - targets: ['localhost:8888']
+          - job_name: 'crio'
+            scrape_interval: 10s
+            static_configs:
+            - targets: ['0.0.0.0:9537']
     processors:
       batch:
       memory_limiter:
         check_interval: 1s
-        limit_percentage: 80
+        limit_percentage: 95
         spike_limit_percentage: 25
-      resourcedetection/openshift:
-        detectors: [openshift]
-        timeout: 2s
-        override: false
     exporters:
-      otlphttp/2:
-        # endpoint: https://OCP_ROUTE_OTELCOL
-        endpoint: https://otelcol-thanos.apps.open-svc-sts.k1wl.p1.openshiftapps.com
-        auth:
-          authenticator: bearertokenauth
-        tls:
-          insecure: false
-          ca_file: /conf/ca/ca.crt
       otlphttp:
         # endpoint: https://OCP_ROUTE_OTELCOL
         endpoint: https://otlp-https.apps.open-svc-sts.k1wl.p1.openshiftapps.com
@@ -70,37 +55,32 @@ spec:
           storage: file_storage
       logging:
         verbosity: detailed
-      prometheusremotewrite/ocp:
-        # endpoint: https://OCP_ROUTE_THANOS_RECEIVE/api/v1/receive
-        endpoint: https://thanos-receive-thanos.apps.open-svc-sts.k1wl.p1.openshiftapps.com/api/v1/receive
-        auth:
-          authenticator: bearertokenauth
-        tls:
-          insecure: false
-          ca_file: /conf/ca/ca.crt
     service:
-      extensions: [bearertokenauth,basicauth/client,file_storage]
+      extensions: [basicauth/client,file_storage]
       pipelines:
         metrics:
           receivers: [otlp,prometheus]
-          processors: [memory_limiter,batch]
-          exporters: [prometheusremotewrite/ocp,otlphttp]
+          exporters: [otlphttp]
         traces:
           receivers: [otlp]
-          processors: [memory_limiter,batch]
-          exporters: [otlphttp,otlphttp/2]
+          exporters: [otlphttp,logging]
         logs:
           receivers: [otlp]
-          processors: [memory_limiter, batch]
-          exporters: [logging,otlphttp]
+          exporters: [otlphttp]
+  hostNetwork: true
   image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.74.0
+  ingress:
+    route: {}
   mode: sidecar
+  replicas: 1
+  resources: {}
   securityContext:
     privileged: true
   serviceAccount: kepler-sa
+  targetAllocator:
+    prometheusCR: {}
+  upgradeStrategy: automatic
   volumeMounts:
-  - mountPath: /conf/edge-token
-    name: edge-token
   - mountPath: /conf/ca
     name: client-ca
   - mountPath: /otc
@@ -111,9 +91,6 @@ spec:
   - configMap:
       name: otelcol-cabundle
     name: cabundle-volume
-  - configMap:
-      name: edge-token
-    name: edge-token
   - configMap:
       name: client-ca
     name: client-ca
