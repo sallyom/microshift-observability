@@ -1,0 +1,9 @@
+# First resize root EBS & confirm it's optimized
+
+pvresize /dev/xvda2
+pvdisplay
+vgs
+vgextend rhel /dev/xvda
+lvs
+lvextend -l +95%FREE /dev/rhel/root
+xfs_growfs /dev/rhel/root
