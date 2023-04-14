@@ -32,7 +32,7 @@ spec:
             scrape_interval: 10s
             static_configs:
             - targets: ['localhost:8888']
-          - job_name: 'crio'
+          - job_name: 'crio-metrics'
             scrape_interval: 10s
             static_configs:
             - targets: ['0.0.0.0:9537']

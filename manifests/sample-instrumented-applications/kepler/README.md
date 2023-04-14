@@ -1,6 +1,6 @@
 ## Kepler on MicroShift in a RHEL based distribution
 
-This assumes MicroShift is running in a RHEL based machine
+This assumes MicroShift is installed in a RHEL based machine
 and the OpenTelemetry Operator is deployed.
 SSH into the virtual machine.
 
@@ -28,7 +28,7 @@ and also that the package `kernel-devel-$(uname -r)` is installed.
 # reboot VM and ssh back in
 ```
 
-#### Start MicroShift service
+#### Start MicroShift service (if not already running)
 
 ```bash
 sudo systemctl enable --now microshift
@@ -48,21 +48,22 @@ git clone https://github.com/sustainable-computing-io/kepler.git
 cd kepler
 ```
 
-Edit the daemonset yaml at `manifests/config/exporter/exporter.yaml` like so.
-
-```bash
-        env:
-        - name: NODE_IP
-          value: <VM IP_ADDRESS>
-```
+#### Modify Kepler manifests for OpenShift
 
 Uncomment the OpenShift lines in `manifests/config/exporter/kustomization.yaml`,
 and remove the `[]` in the line `- patchesStrategicMerge: []`. Then, apply
 the kepler manifests.
 
+#### Modify Daemonset to Deployment
+
+In `kepler/manifests/config/exporter/exporter.yaml` and
+`kepler/manifests/config/exporter/patch/patch-openshift.yaml` edit `Daemonset` to `Deployment`.
+This is because the OpenTelemetryCollector sidecar mode will not work with a DaemonSet,
+and since MicroShift doesn't support multi-node deployments, a Deployment makes as much
+sense as a Daemonset.
+
 ```bash
 oc create ns kepler
-oc apply -f $(pwd)/manifests/config/exporter/openshift-scc.yaml 
 oc apply --kustomize $(pwd)/manifests/config/base -n kepler
 # Check that kepler pod is up and running before proceeding
 ```
@@ -72,13 +73,12 @@ oc apply --kustomize $(pwd)/manifests/config/base -n kepler
 (cd back to this repository)
 Edit [manifests/sample-instrumented-applications/kepler/microshift-otelcollector.yaml](./microshift-otelcollector.yaml) to configure the correct receivers, exporters, and pipelines.
 
-This example configures a `prometheusremotewrite` exporter to send data to thanos-receive running in OpenShift.
-
 ```bash
 oc apply -n kepler -f manifests/sample-instrumented-applications/kepler/microshift-otelcollector.yaml
 oc get pods -n kepler
-# an opentelemetry collector deployment should be triggered and a pod should be running.
-# examine the collector pod logs to verify data is being received and exported from kepler-exporter
+# an opentelemetry collector sidecar container should be triggered and a pod should be running.
+# examine the collector pod logs from `-c otc-container` to verify data is being received and
+exported from kepler-exporter
 ```
 
 View [this Grafana Engineering post](https://grafana.com/blog/2022/05/10/how-to-collect-prometheus-metrics-with-the-opentelemetry-collector-and-grafana/) for details on how to send data to Grafana Cloud.
