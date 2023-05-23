@@ -9,23 +9,15 @@ name = "vim"
 version = "*"
 
 [[packages]]
-name = "kernel-devel-4.18.0-425.13.1.el8_7.x86_64"
+name = "kernel-devel-4.18.0-425.19.2.el8_7.x86_64"
+version = "*"
+
+[[packages]]
+name = "cloud-utils-growpart"
 version = "*"
 
 [[packages]]
 name = "pcp-zeroconf"
-version = "*"
-
-[[packages]]
-name = "grafana"
-version = "*"
-
-[[packages]]
-name = "grafana-pcp"
-version = "*"
-
-[[packages]]
-name = "redis"
 version = "*"
 
 [[packages]]
