@@ -1,9 +1,6 @@
 extensions:
   bearertokenauth:
     filename: /conf/edge-token
-  file_storage:
-    directory: /otc
-    timeout: 10s
 receivers:
   prometheus:
     config:
@@ -12,7 +9,6 @@ receivers:
         scrape_interval: 5s
         static_configs:
         - targets: ['127.0.0.1:44322'] # instrumented app endpoint
-
 processors:
   batch:
   memory_limiter:
@@ -22,6 +18,15 @@ processors:
 exporters:
   prometheusremotewrite/ocp:
     endpoint: https://thanos-receive-thanos.apps.open-svc-sts.k1wl.p1.openshiftapps.com/api/v1/receive
+    #remote_write_queue:
+    #  enabled: true
+    #wal:
+    #  buffer_size: 100
+    #  directory: /otc
+    #  truncate_frequency: 45s
+    external_labels:
+      host: ip-172-31-24-148 
+      userid: 123456
     auth:
       authenticator: bearertokenauth
     tls:
@@ -30,7 +35,7 @@ exporters:
   logging:
     verbosity: detailed
 service:
-  extensions: [file_storage,bearertokenauth]
+  extensions: [bearertokenauth]
   telemetry:
     metrics:
       level: detailed
