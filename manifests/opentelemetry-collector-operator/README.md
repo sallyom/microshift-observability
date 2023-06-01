@@ -3,7 +3,7 @@
 Deploy the OpenTelemetry Collector Operator in MicroShift:
 
 ```bash
-oc apply -n opentelemetry-collector-operator -f manifests/opentelemetry-collector-operator/otelcol-operator.yaml
+oc apply -n opentelemetry-collector-operator -f manifests/opentelemetry-collector-operator/opentelemetry-operator.yaml
 ```
 
 An opentelemetry-collector operator pod should now be running in `-n opentelemetry-collector-operator`.
@@ -16,6 +16,7 @@ steps to configure an OpenShift cluster for collecting telemetry from edge deplo
 #### Configure Authentication for Thanos Receive
 
 Run the following from `edge MicroShift cluster otelcol namespace`, where OpenTelemetryCollector will be running.
+In the following example, it is assumed the collector will run in `-n otelcol`. Substitute the namespace when necessary.
 
 ```bash
 # scp'd files are at ~/redhat/.

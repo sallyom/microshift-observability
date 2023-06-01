@@ -26,10 +26,9 @@ oc apply -f thanos-scc.yaml
 #oc -n thanos create thanos-store-gateway-sa.yaml
 #oc -n thanos adm policy add-scc-to-user anyuid -z thanos-store-gateway
 
-# create thanos-receive, edge, and thanos-querier serviceaccounts and policies
+# create thanos-receive and thanos-querier serviceaccounts and policies
 oc -n thanos create -f sa.yaml
 oc -n thanos adm policy add-cluster-role-to-user system:auth-delegator -z thanos-receive
-oc -n thanos adm policy add-role-to-user view -z edge
 oc -n thanos annotate serviceaccount thanos-receive serviceaccounts.openshift.io/oauth-redirectreference.thanos-receive='{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"thanos-receive"}}'
 oc -n thanos annotate serviceaccount thanos-querier serviceaccounts.openshift.io/oauth-redirectreference.thanos-querier='{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"thanos-querier"}}'
 
@@ -51,8 +50,8 @@ oc -n thanos create secret generic thanos-querier-proxy --from-literal=session_s
 oc -n thanos create -f thanos-querier-thanos-receive.yaml
 oc -n thanos create route reencrypt thanos-querier --service=thanos-querier --port=web-proxy --insecure-policy=Redirect
 
-# scp edge serviceaccount token to edge cluster
-oc -n thanos create token edge --duration 999999h > edge-token
+# scp thanos-receive serviceaccount token to edge cluster
+oc -n thanos create token thanos-receive --duration 999999h > edge-token
 scp edge-token redhat@<MICROSHIFT_VM>:
 
 # back to openshift-observability-hub directory
@@ -100,7 +99,7 @@ follow the below steps in the MicroShift machine. If running the
 
 #### Configure Authentication for Thanos Receive
 
-Run the following from `edge MicroShift cluster otelcol namespace`, where OpenTelemetryCollector is running & collecting data
+Run the following from `edge/MicroShift cluster and the otelcol namespace`, where OpenTelemetryCollector is running & collecting data
 
 ```bash
 # scp'd files are at ~/redhat/.
@@ -140,16 +139,3 @@ With the example from this repository, you should have CRI-O traces and possibly
 traces. 
 
 You can also query metrics from your application in OpenShift, `-n thanos` the `thanos-querier route`
-
-### Bonus - Import Grafana Dashboard for sample Kepler application
-
-Run this against the **OpenShift hub cluster**
-
-```bash
-cd microshift-observability/manifests/openshift-observability-hub/thanos-receiver/dashboard-example-kepler
-./deploy-grafana.sh
-```
-
-Here is a screenshot of Kepler grafana dashboard in OpenShift showing data from MicroShift edge cluster.
-
-![kepler-dashboard-microshift-in-ocp.png](./kepler-dashboard-microshift-in-ocp.png)

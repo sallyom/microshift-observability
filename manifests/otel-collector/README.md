@@ -18,21 +18,3 @@ oc apply -n otelcol -k manifests/otel-collector/
 
 An opentelemetry-collector pod should now be running in `-n otelcol`. View the logs of the opentelemetry collector pod
 to ensure data is being received and exported as expected.
-
-#### Send Metrics to remote Prometheus and Grafana
-
-This example configures a `prometheusremotewrite` exporter to send data to GrafanaCloud.
-View [this Grafana Engineering post](https://grafana.com/blog/2022/05/10/how-to-collect-prometheus-metrics-with-the-opentelemetry-collector-and-grafana/) for more details.
-With the correct API tokens, serviceaccounts, and services, it will be possible to send metrics to Prometheus & Grafana running in OpenShift. Configuration for this will be included
-in the near future.
-
-For exporting traces to a remote backend there are two examples in this repository; Jaeger and Grafana Agent.
-
-#### Sending OTLP trace data to Jaeger from OpenTelemetry Collector
-
-For this Jaeger is running on the local system external to the virtual machine. For this example,
-refer to [the Jaeger deployment document](../jaeger/jaeger.md).
-
-#### Sending OTLP trace data to Grafana Cloud Tempo from OpenTelemetry Collector
-
-Refer to [the Grafana Agent deployment document](../grafana-agent/README.md).

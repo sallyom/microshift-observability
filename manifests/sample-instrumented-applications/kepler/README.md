@@ -1,30 +1,19 @@
 ## Kepler on MicroShift in a RHEL based distribution
 
-This assumes MicroShift is installed in a RHEL based machine
-and the OpenTelemetry Operator is deployed.
+This assumes MicroShift is installed on a RHEL based machine.
 SSH into the virtual machine.
 
-Configure MicroShift and Kepler
+### Execute below commands from within the RHEL machine
 
-```bash
-# If running in KVM, or obtain the ip address otherwise
-sudo virsh domifaddr microshift-starter # note the IP address 
-export IP_ADDR=<ip address from above>
-# password is 'redhat' for below cmds
-scp ./configure-microshift-vm-kepler.sh  redhat@${IPADDR}:
-ssh redhat@${IPADDR}
-```
-
-### Execute below commands from within the virtual machine
-
-Configure cgroups-v2 and run the configuration script.
+Configure cgroups-v2 and install `kernel-devel-$(uname -r)`.
 The following script will not work if running in rpm-ostree based OS such as RHEL Device Edge.
 With rpm-ostree based systems, be sure your machine is running with cgroupsv2 enabled,
 and also that the package `kernel-devel-$(uname -r)` is installed.
 
 ```bash
-./configure-microshift-vm-kepler.sh ~/.pull-secret.json cgroupsv2=true
-# script will ask for your RH account creds for subscription, then will run unattended
+curl -o configure-kepler-vm.sh https://raw.githubusercontent.com/sallyom/microshift-observability/main/manifests/sample-instrumented-applications/kepler/configure-microshift-vm-kepler.sh
+./configure-kepler-vm.sh
+# script will ask for your RH account creds for subscription if not already registered
 # reboot VM and ssh back in
 ```
 
@@ -41,7 +30,13 @@ oc get pods -A # all pods should soon be running
 #### Kepler Deployment
 
 Kepler is a research project that that uses eBPF to probe CPU performance counters and Linux kernel tracepoints
-to calculate an application’s carbon footprint. Refer to [Kepler documentation](https://sustainable-computing.io/) for further information.
+to calculate an application's carbon footprint. Refer to [Kepler documentation](https://sustainable-computing.io/) for further information.
+
+> **Note**
+> For running in MicroShift on Red Hat Device Edge, I've found it's easiest to use `kustomize` to apply kepler manifests,
+> and then an opentelemetry collector pod with `podman` rather than as a pod within MicroShift. This does not require any additional tools
+> or operators to be installed. On systems where it's easy to mix K8s and non-K8s workloads, and where resource constraints are an issue,
+> this approach works well. On other systems, `helm` and `opentelemetry operator` offer convenience.
 
 ```bash
 git clone https://github.com/sustainable-computing-io/kepler.git
@@ -50,45 +45,83 @@ cd kepler
 
 #### Modify Kepler manifests for OpenShift
 
-Uncomment the OpenShift lines in `manifests/config/exporter/kustomization.yaml`,
+Uncomment the OpenShift lines in `manifests/config/exporter/kustomization.yaml`
+(`Line#3` and `Line#16` at time of this writing),
 and remove the `[]` in the line `- patchesStrategicMerge: []`. Then, apply
 the kepler manifests.
-
-#### Modify Daemonset to Deployment
-
-In `kepler/manifests/config/exporter/exporter.yaml` and
-`kepler/manifests/config/exporter/patch/patch-openshift.yaml` edit `Daemonset` to `Deployment`.
-This is because the OpenTelemetryCollector sidecar mode will not work with a DaemonSet,
-and since MicroShift doesn't support multi-node deployments, a Deployment makes as much
-sense as a Daemonset.
 
 ```bash
 oc create ns kepler
 oc apply --kustomize $(pwd)/manifests/config/base -n kepler
+
+# patch kepler to run with hostnetwork, for compatibility with podman running opentelemetry collector
+curl -o patch.yaml https://raw.githubusercontent.com/sallyom/microshift-observability/main/manifests/sample-instrumented-applications/kepler/patch.yaml
+oc patch daemonset kepler-exporter --patch-file patch.yaml
 # Check that kepler pod is up and running before proceeding
 ```
 
-#### Create OpenTelemetry Collector
+### Configure OpenShift cluster
 
-(cd back to this repository)
-Edit [manifests/sample-instrumented-applications/kepler/microshift-otelcollector.yaml](./microshift-otelcollector.yaml) to configure the correct receivers, exporters, and pipelines.
+Refer to [openshift-observability-hub](../../edge-pcp-to-ocp/README.md#hub-openshift-cluster) as an example
+to configure an OpenShift cluster to receive telemetry from edge deployments. If you have any endpoint
+where it's possible to send OTLP and/or Prometheus data, you can substitute that endpoint for the thanos-receive steps.
+What's required is a `prometheusremotewrite` endpoint. Here the `thanos-receive` example mentioned above is being used.
+ 
+#### Ensure OpenShift CA and token are on the edge system
 
 ```bash
-oc apply -n kepler -f manifests/sample-instrumented-applications/kepler/microshift-otelcollector.yaml
-oc get pods -n kepler
-# an opentelemetry collector sidecar container should be triggered and a pod should be running.
-# examine the collector pod logs from `-c otc-container` to verify data is being received and
-exported from kepler-exporter
+# scp'd files from OpenShift are expected to be in $HOME on the edge system.
+ssh redhat@<RHEL_VM>
+ls ~/ca.crt ~/edge-token
 ```
 
-View [this Grafana Engineering post](https://grafana.com/blog/2022/05/10/how-to-collect-prometheus-metrics-with-the-opentelemetry-collector-and-grafana/) for details on how to send data to Grafana Cloud.
+### Run OpenTelemetry Collector pod (podman)
 
-### Import and view grafana dashboard
+Download the opentelemetry config file
 
-Follow the Grafana documentation to import the Kepler-Exporter dashboard.
+```bash
+curl -o podman-otelconfig.yaml https://raw.githubusercontent.com/sallyom/microshift-observability/main/manifests/sample-instrumented-applications/kepler/podman-otelconfig.yaml
+```
 
-[Kepler dashboard to import](https://github.com/sustainable-computing-io/kepler/blob/main/grafana-dashboards/Kepler-Exporter.json)
+Edit [manifests/sample-instrumented-applications/kepler/podman-otelconfig.yaml](./podman-otelconfig.yaml) to suit your needs.
+This example also collectos Performance Co-Pilot metrics. Remove that target from the receivers section if not running PCP.
+
+```bash
+cd $HOME
+# Note the ca.crt & edge-token are assumed to exist at $(pwd)/.
+
+sudo podman run --rm -d --name otelcol-host \
+  --security-opt label=disable  \
+  --user=0 \
+  --cap-add SYS_ADMIN \
+  --tmpfs /tmp --tmpfs /run \
+  -v /var/log/:/var/log 
+  -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+  -v $(pwd)/ca.crt:/conf/ca.crt:z \
+  -v $(pwd)/edge-token:/conf/edge-token:z \
+  -v $(pwd)/podman-otelconfig.yaml:/etc/otelcol-contrib/config.yaml:z\
+  --net=host \
+  quay.io/sallyom/ubi8-otelcolcontrib:latest --config=file:/etc/otelcol-contrib/config.yaml
+```
+
+### Deploy Grafana and the Prometheus DataSource with Kepler Dashboard
+
+You can query metrics from your application in OpenShift, `-n thanos` with the `thanos-querier route`.
+However, you might prefer to view the prometheus metrics in Grafana with the upstream
+[kepler exporter dashboard](https://github.com/sustainable-computing-io/kepler/blob/main/grafana-dashboards/Kepler-Exporter.json)
+
+To deploy grafana, prometheus, and the dashboard, run this against the **OpenShift cluster**
+
+```bash
+cd microshift-observability/manifests/sample-instrumented-applications/kepler/dashboard-example-kepler
+./deploy-grafana.sh
+```
+
+You should now be able to access Grafana with `username: rhel` and `password:rhel` from the grafana route.
+
+* Navigate to Dashboards -> to find Kepler Exporter dashboard.
+* Navigate to Explore -> to find the Prometheus data source to query metrics from.
 
 Hopefully, you'll see something like this!
 
-![You might see something like this!](../../../images/kepler-microshift.png "MicroShift, Kepler, and OpenTelemetry")
+![You might see something like this!](../../../images/kepler-microshift.png)
