@@ -12,7 +12,7 @@ Then, view the following observability scenarios:
 5. [Grafana Agent](manifests/grafana-agent/README.md)
 2. [OpenTelemetry Collector No Operator](manifests/otel-collector/README.md)
 2. [Create Amazon Machine Image for RHEL Device Edge OS](ami/README.md)
-2. [Performance CoPilot in RHEL Device Edge](./PCP/README.md)
+2. [Performance CoPilot in RHEL Device Edge](./manifests/edge-pcp-to-ocp/README.md)
 
 ### CPU/Memory from kube-metrics-server
 
