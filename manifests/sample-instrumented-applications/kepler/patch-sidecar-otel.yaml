@@ -1,30 +1,7 @@
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: otelcol
-  namespace: otelcol
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  labels:
-    otel: collect
-  name: otel-collector
 spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      otel: collect
   template:
-    metadata:
-      labels:
-        otel: collect
     spec:
-      serviceAccountName: otelcol 
-      hostNetwork: true # this is only to access hostNetwork Jaeger service
-      serviceAccount: otelcol 
-      securityContext:
-        privileged: true
       volumes:
       - configMap:
           name: otelcol
@@ -39,7 +16,7 @@ spec:
           name: otelcol-cabundle
         name: cabundle-volume
       containers:
-      - name: otel-collector
+      - name: otc-container
         imagePullPolicy: IfNotPresent
         args:
           - "--config=/conf/config/otelconfig.yaml"
@@ -54,7 +31,6 @@ spec:
         ports:
         - containerPort: 4317 # Default endpoint for OpenTelemetry receiver.
         - containerPort: 4318 # Default endpoint for OpenTelemetry receiver.
-        - containerPort: 9999
         volumeMounts:
         - mountPath: /conf/ca
           name: client-ca
@@ -64,21 +40,3 @@ spec:
           name: otelconfig
         - mountPath: /etc/pki/ca-trust/source/service-ca
           name: cabundle-volume
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    otel: collect
-  name: otel-collector
-spec:
-  ports:
-  - name: otlp
-    port: 4317
-    protocol: TCP
-  - name: otlphttp
-    port: 4318
-    protocol: TCP
-  selector:
-    otel: collect
-  type: ClusterIP

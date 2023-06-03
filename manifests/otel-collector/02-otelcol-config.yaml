@@ -3,11 +3,13 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: otelcol
-  namespace: otelcol
   labels:
     otel: collect
 data:
-  otel-collector-config: |
+  otelconfig.yaml: |
+    extensions:
+      bearertokenauth:
+        filename: /conf/edge-token/edge-token
     receivers:
       otlp:
         protocols:
@@ -19,7 +21,6 @@ data:
           - job_name: 'otel-collector'
             scrape_interval: 5s
             static_configs:
-             # any target listed must have a networkpolicy allowing opentelemetry collector access to metrics
             - targets: ['10.42.0.118:9102'] # application metrics endpoint
     processors:
       memory_limiter:
@@ -28,12 +29,26 @@ data:
         spike_limit_mib: 400
       batch:
     exporters:
+      otlphttp:
+        # endpoint: https://OCP_ROUTE_OTELCOL
+        endpoint: https://otelcol-thanos.apps.ci-ln-w3ydddb-76ef8.origin-ci-int-aws.dev.rhcloud.com # otel-collector service route from OCP, port 4318
+        auth:
+          authenticator: bearertokenauth
+        tls:
+          insecure: false
+          ca_file: /conf/ca/ca.crt
       logging:
         verbosity: detailed
       prometheusremotewrite:
-        endpoint: https://<USERNAME>:<PASSWORD>@<PROMENDPOINTURL>
-        # for me looks something like: 
-        # endpoint: https://64777:eyJrIjoxxxxxxxxxxxxxxx@prometheus-prod-10-prod-us-central-0.grafana.net/api/prom/push
+        # endpoint: https://OCP_ROUTE_THANOS_RECEIVE/api/v1/receive
+        endpoint: https://thanos-receive-thanos.apps.ci-ln-w3ydddb-76ef8.origin-ci-int-aws.dev.rhcloud.com/api/v1/receive
+        auth:
+          authenticator: bearertokenauth
+        tls:
+          insecure: false
+          ca_file: /conf/ca/ca.crt
+      logging:
+        verbosity: detailed
       jaeger:
         endpoint: "localhost:14250" # Jaeger service port-forwarded from remote (local) machine
         tls:

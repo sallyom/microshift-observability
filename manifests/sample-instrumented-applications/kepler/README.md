@@ -34,9 +34,8 @@ to calculate an application's carbon footprint. Refer to [Kepler documentation](
 
 > **Note**
 > For running in MicroShift on Red Hat Device Edge, I've found it's easiest to use `kustomize` to apply kepler manifests,
-> and then an opentelemetry collector pod with `podman` rather than as a pod within MicroShift. This does not require any additional tools
-> or operators to be installed. On systems where it's easy to mix K8s and non-K8s workloads, and where resource constraints are an issue,
-> this approach works well. On other systems, `helm` and `opentelemetry operator` offer convenience.
+> and a standalone OpenTelemetry Collector either with podman or as a sidecar container in the kepler-exporter DaemonSet.
+> On other systems where resource constraints are less of a concern, `helm` and `opentelemetry operator` offer convenience.
 
 ```bash
 git clone https://github.com/sustainable-computing-io/kepler.git
@@ -54,9 +53,6 @@ the kepler manifests.
 oc create ns kepler
 oc apply --kustomize $(pwd)/manifests/config/base -n kepler
 
-# patch kepler to run with hostnetwork, for compatibility with podman running opentelemetry collector
-curl -o patch.yaml https://raw.githubusercontent.com/sallyom/microshift-observability/main/manifests/sample-instrumented-applications/kepler/patch.yaml
-oc patch daemonset kepler-exporter --patch-file patch.yaml
 # Check that kepler pod is up and running before proceeding
 ```
 
@@ -65,7 +61,8 @@ oc patch daemonset kepler-exporter --patch-file patch.yaml
 Refer to [openshift-observability-hub](../../edge-pcp-to-ocp/README.md#hub-openshift-cluster) as an example
 to configure an OpenShift cluster to receive telemetry from edge deployments. If you have any endpoint
 where it's possible to send OTLP and/or Prometheus data, you can substitute that endpoint for the thanos-receive steps.
-What's required is a `prometheusremotewrite` endpoint. Here the `thanos-receive` example mentioned above is being used.
+What's required is a `prometheusremotewrite` endpoint or an `OTLP` receiver endpoint.
+Here the `thanos-receive` example mentioned above is being used.
  
 #### Ensure OpenShift CA and token are on the edge system
 
@@ -75,20 +72,54 @@ ssh redhat@<RHEL_VM>
 ls ~/ca.crt ~/edge-token
 ```
 
-### Run OpenTelemetry Collector pod (podman)
+### Launch OpenTelemetry Collector to receive and export kepler metrics
 
-Download the opentelemetry config file
+There are two options shown here for launching the OpenTelemetry Collector.
+The first is to launch OpenTelemetry Collector as a sidecar container to the kepler exporter DaemonSet.
+The second is to run OpenTelemetry Collector with podman on the host, external
+to MicroShift.
+Both of these options remote-write kepler metrics to a thanos-receive pod running in OpenShift.
+
+#### Option 1: Add collector sidecar and patch the kepler-exporter service
+
+Download the opentelemetry config file and modify as necessary to configure receivers and exporters.
+
+```bash
+curl -o microshift-otelconfig.yaml https://raw.githubusercontent.com/sallyom/microshift-observability/main/manifests/sample-instrumented-applications/kepler/microshift-otelconfig.yaml
+```
+
+Run the following to launch an OpenTelemetry Collector sidecar container in the kepler-exporter Daemonset
+
+```bash
+oc create configmap -n kepler client-ca --from-file ~/ca.crt
+oc create configmap -n kepler edge-token --from-file ~/edge-token
+oc create configmap -n kepler -f microshift-otelconfig.yaml
+
+# patch service to expose otlp ports
+oc patch service kepler-exporter -n kepler --patch-file https://raw.githubusercontent.com/sallyom/microshift-observability/main/manifests/sample-instrumented-applications/kepler/patch-service.yaml
+
+# patch daemonset to add a sidecar opentelemetry collector container
+oc patch daemonset kepler-exporter -n kepler --patch-file https://raw.githubusercontent.com/sallyom/microshift-observability/main/manifests/sample-instrumented-applications/kepler/patch-sidecar.yaml
+```
+
+Check that the kepler-exporter now includes an otc-container and that the collector is receiving and exporting metrics as expected.
+Finally, [deploy grafana in OpenShift with a prometheus datasource to view the metrics.](#deploy-grafana-and-the-prometheus-datasource-with-kepler-dashboard)
+
+####  Option 2: Run OpenTelemetry Collector in a local pod
+
+Download the opentelemetry config file and modify as necessary to configure receivers and exporters.
+This example also collectos Performance Co-Pilot metrics. Remove that target from the receivers section if not running PCP.
 
 ```bash
 curl -o podman-otelconfig.yaml https://raw.githubusercontent.com/sallyom/microshift-observability/main/manifests/sample-instrumented-applications/kepler/podman-otelconfig.yaml
 ```
 
-Edit [manifests/sample-instrumented-applications/kepler/podman-otelconfig.yaml](./podman-otelconfig.yaml) to suit your needs.
-This example also collectos Performance Co-Pilot metrics. Remove that target from the receivers section if not running PCP.
-
 ```bash
 cd $HOME
 # Note the ca.crt & edge-token are assumed to exist at $(pwd)/.
+
+# patch kepler to run with hostnetwork, for compatibility with podman running opentelemetry collector
+oc patch -n kepler daemonset kepler-exporter --patch-file https://raw.githubusercontent.com/sallyom/microshift-observability/main/manifests/sample-instrumented-applications/kepler/patch.yaml
 
 sudo podman run --rm -d --name otelcol-host \
   --security-opt label=disable  \
@@ -103,6 +134,8 @@ sudo podman run --rm -d --name otelcol-host \
   --net=host \
   quay.io/sallyom/ubi8-otelcolcontrib:latest --config=file:/etc/otelcol-contrib/config.yaml
 ```
+Check with `sudo podman logs otelcol-host` that the collector is receiving and exporting metrics as expected.
+Finally, [deploy grafana in OpenShift with a prometheus datasource to view the metrics.](#deploy-grafana-and-the-prometheus-datasource-with-kepler-dashboard)
 
 ### Deploy Grafana and the Prometheus DataSource with Kepler Dashboard
 
