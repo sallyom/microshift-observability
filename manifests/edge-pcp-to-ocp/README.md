@@ -5,75 +5,28 @@ Metrics are sent from OpenTelemetry Collector running in a podman container usin
 
 ### Hub OpenShift cluster
 
-Deploy Thanos receiver outlined below.
+#### Deploy Thanos Receive in OpenShift
 
-#### Deploy Thanos Receive
+For this example, we will use Thanos. A `Thanos Operator` as well as the `Observability Operator` are available in OperatorHub with
+any OpenShift installation. However, for this example,
+refer to [OpenShift with Thanos-Receive](../openshift-thanos-receive.md) to enable a simple Prometheus remote-write
+endpoint with `thanos-receive`.
 
-Refer to [federated prometheus blog](https://cloud.redhat.com/blog/federated-prometheus-with-thanos-receive)
-and also [thanos-receive OpenShift demo](https://github.com/rhthsa/openshift-demo/blob/main/thanos-receive.md)
-
-For this example, thanos-store-gateway is not deployed. Refer to the blogs above to configure thanos storage for HA.
-
-```bash
-cd thanos-receiver
-oc create ns thanos
-oc apply -f thanos-scc.yaml
-
-# If adding thanos-store-gateway run below command
-#oc -n thanos create secret generic store-s3-credentials --from-file=store-s3-secret.yaml
-#oc -n thanos create thanos-store-gateway-sa.yaml
-#oc -n thanos adm policy add-scc-to-user anyuid -z thanos-store-gateway
-
-# create thanos-receive, edge, and thanos-querier serviceaccounts and policies
-oc -n thanos create -f sa.yaml
-oc -n thanos adm policy add-cluster-role-to-user system:auth-delegator -z thanos-receive
-oc -n thanos annotate serviceaccount thanos-receive serviceaccounts.openshift.io/oauth-redirectreference.thanos-receive='{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"thanos-receive"}}'
-oc -n thanos annotate serviceaccount thanos-querier serviceaccounts.openshift.io/oauth-redirectreference.thanos-querier='{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"thanos-querier"}}'
-
-# create serviceaccount tokens
-oc -n thanos create -f thanos-sa-token-secrets.yaml 
-
-# If adding thanos-store-gateway run below commands
-# create thanos store gateway
-# oc -n thanos create -f store-gateway.yaml
-# oc -n thanos get pods -l "app=thanos-store-gateway"
-
-# create thanos receiver
-oc -n thanos create secret generic thanos-receive-proxy --from-literal=session_secret=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c43)
-oc -n thanos apply -f thanos-receive.yaml
-oc -n thanos create route reencrypt thanos-receive --service=thanos-receive --port=web-proxy --insecure-policy=Redirect
-
-# create thanos querier
-oc -n thanos create secret generic thanos-querier-proxy --from-literal=session_secret=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c43)
-oc -n thanos create -f thanos-querier-thanos-receive.yaml
-oc -n thanos create route reencrypt thanos-querier --service=thanos-querier --port=web-proxy --insecure-policy=Redirect
-
-# scp thanos-receive serviceaccount token to RHEL machine
-oc -n thanos create token thanos-receive --duration 999999h > edge-token
-scp edge-token user@<RHEL_MACHINE>:
-
-```
-
-#### Find Thanos Receive URL, scp to RHEL machine for prometheusremotewrite exporter
-
-```
-oc -n thanos get route thanos-receive -o jsonpath='{.status.ingress[*].host}' > thanos-receive-url
-scp thanos-receive-url user@<RHEL_VM>:
-```
-#### Extract root CA and SCP to RHEL machine
+You can substitute `thanos-receive` for any endpoint where it's possible to send OTLP and/or Prometheus data.
+What's required is a `prometheusremotewrite` endpoint or an `OTLP` receiver endpoint.
+ 
+#### Ensure OpenShift CA and token are on the edge system
 
 ```bash
-oc extract cm/kube-root-ca.crt -n openshift-config
-scp ca.crt  user@<RHEL_VM>:
+# scp'd files from OpenShift are expected to be in $HOME on the edge system.
+
+ssh redhat@<RHEL_VM>
+ls ~/ca.crt ~/edge-token ~/thanos-receive-url
 ```
 
 ### RHEL machine
 
-#### Configure Authentication for Thanos Receive
-
-**scp'd files are at $HOME/.**
-
-#### Update OpenTelemetry Collector config  with OCP URLs, tokens
+#### Update OpenTelemetry Collector config with OCP URLs, tokens
 
 ```bash
 wget https://raw.githubusercontent.com/sallyom/microshift-observability/main/manifests/edge-pcp-to-ocp/otelcol-config.yaml

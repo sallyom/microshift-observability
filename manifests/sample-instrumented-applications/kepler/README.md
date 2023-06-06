@@ -58,18 +58,23 @@ oc apply --kustomize $(pwd)/manifests/config/base -n kepler
 
 ### Configure OpenShift cluster
 
-Refer to [openshift-observability-hub](../../edge-pcp-to-ocp/README.md#hub-openshift-cluster) as an example
-to configure an OpenShift cluster to receive telemetry from edge deployments. If you have any endpoint
-where it's possible to send OTLP and/or Prometheus data, you can substitute that endpoint for the thanos-receive steps.
+#### Deploy Thanos Receive in OpenShift
+
+For this example, we will use Thanos. A `Thanos Operator` as well as the `Observability Operator` are available in OperatorHub with
+any OpenShift installation. However, for this example,
+refer to [OpenShift with Thanos-Receive](../openshift-thanos-receive.md) to enable a simple Prometheus remote-write
+endpoint with `thanos-receive`.
+
+You can substitute `thanos-receive` for any endpoint where it's possible to send OTLP and/or Prometheus data.
 What's required is a `prometheusremotewrite` endpoint or an `OTLP` receiver endpoint.
-Here the `thanos-receive` example mentioned above is being used.
  
 #### Ensure OpenShift CA and token are on the edge system
 
 ```bash
 # scp'd files from OpenShift are expected to be in $HOME on the edge system.
+
 ssh redhat@<RHEL_VM>
-ls ~/ca.crt ~/edge-token
+ls ~/ca.crt ~/edge-token ~/thanos-receive-url
 ```
 
 ### Launch OpenTelemetry Collector to receive and export kepler metrics
