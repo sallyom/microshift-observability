@@ -62,7 +62,7 @@ oc apply --kustomize $(pwd)/manifests/config/base -n kepler
 
 For this example, we will use Thanos. A `Thanos Operator` as well as the `Observability Operator` are available in OperatorHub with
 any OpenShift installation. However, for this example,
-refer to [OpenShift with Thanos-Receive](../openshift-thanos-receive.md) to enable a simple Prometheus remote-write
+refer to [OpenShift with Thanos-Receive](../../openshift-thanos-receive.md) to enable a simple Prometheus remote-write
 endpoint with `thanos-receive`.
 
 You can substitute `thanos-receive` for any endpoint where it's possible to send OTLP and/or Prometheus data.
@@ -104,7 +104,7 @@ oc create configmap -n kepler -f microshift-otelconfig.yaml
 oc patch service kepler-exporter -n kepler --patch-file https://raw.githubusercontent.com/sallyom/microshift-observability/main/manifests/sample-instrumented-applications/kepler/patch-service.yaml
 
 # patch daemonset to add a sidecar opentelemetry collector container
-oc patch daemonset kepler-exporter -n kepler --patch-file https://raw.githubusercontent.com/sallyom/microshift-observability/main/manifests/sample-instrumented-applications/kepler/patch-sidecar.yaml
+oc patch daemonset kepler-exporter -n kepler --patch-file https://raw.githubusercontent.com/sallyom/microshift-observability/main/manifests/sample-instrumented-applications/kepler/patch-sidecar-otel.yaml
 ```
 
 Check that the kepler-exporter now includes an otc-container and that the collector is receiving and exporting metrics as expected.
