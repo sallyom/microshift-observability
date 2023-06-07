@@ -15,7 +15,7 @@ endpoint with `thanos-receive`.
 You can substitute `thanos-receive` for any endpoint where it's possible to send OTLP and/or Prometheus data.
 What's required is a `prometheusremotewrite` endpoint or an `OTLP` receiver endpoint.
  
-#### Ensure OpenShift CA and token are on the edge system
+#### Ensure OpenShift CA, Thanos URL, and token are on the edge system
 
 ```bash
 # scp'd files from OpenShift are expected to be in $HOME on the edge system.
@@ -32,7 +32,7 @@ ls ~/ca.crt ~/edge-token ~/thanos-receive-url
 wget https://raw.githubusercontent.com/sallyom/microshift-observability/main/manifests/edge-pcp-to-ocp/otelcol-config.yaml
 ```
 
-Now copy contents of `thanos-receive-url` to [otelcol-config.yaml](./otelcol-config.yaml) Line #24
+Now copy contents of `thanos-receive-url` to [otelcol-config.yaml](./otelcol-config.yaml) Line #20 at time of this writing.
 
 #### Run OpenTelemetry Collector with podman
 
@@ -62,7 +62,7 @@ However, you might prefer to view the prometheus metrics in Grafana.
 Run this against the **OpenShift hub cluster**
 
 ```bash
-cd microshift-observability/manifests/edge-pcp-to-ocp/thanos-receiver/dashboard-pcp-prometheus
+cd microshift-observability/manifests/edge-pcp-to-ocp/dashboard-pcp-prometheus
 ./deploy-grafana.sh
 ```
 

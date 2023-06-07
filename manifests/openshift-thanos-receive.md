@@ -10,7 +10,7 @@ and also [thanos-receive OpenShift demo](https://github.com/rhthsa/openshift-dem
 For this example, thanos-store-gateway is not deployed. Refer to the blogs above to configure thanos storage for HA.
 
 ```bash
-cd thanos-receiver
+cd manifests/openshift-observability-hub/thanos-receive
 oc create ns thanos
 oc apply -f thanos-scc.yaml
 

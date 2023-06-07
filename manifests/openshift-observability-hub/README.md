@@ -27,7 +27,7 @@ cd manifests/openshift-observability-hub
 # create jaeger instance to visualize trace data
 oc -n thanos apply -f jaeger.yaml
 
-# create opentelemetry collector sidecar in thanos-receiver and route to collect trace data
+# create opentelemetry collector sidecar in thanos-receive deployment and a route to collect trace data
 oc -n thanos apply -f ocp-sidecar-otelcol.yaml
 # this might be a bug, but have to kill the thanos-receive-0 pod to refresh and pick up the sidecar container
 oc -n thanos delete pod thanos-receive-0
