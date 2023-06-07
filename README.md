@@ -3,14 +3,13 @@
 This repository is a collection of manifests to enable observability in MicroShift. To get started, follow this README to deploy a VM and MicroShift.
 Then, view the following observability scenarios:
 
-1. [Kubernetes Metrics Server](manifests/metrics-server/README.md)
+1. [Kubernetes Metrics Server on MicroShift](manifests/metrics-server/README.md)
 5. [Send Telemetry to OpenShift Cluster](manifests/openshift-observability-hub/README.md)
-2. [OpenTelemetry Collector Operator & Collector](manifests/opentelemetry-collector-operator/README.md)
+2. [OpenTelemetry Operator & Collector](manifests/opentelemetry-collector-operator/README.md)
 3. [MicroShift Kepler Deployment with OpenShift Monitoring Stack](manifests/sample-instrumented-applications/kepler/README.md)
 2. [Performance CoPilot in RHEL Device Edge](./manifests/edge-pcp-to-ocp/README.md)
 3. [Sample Application with Traces](manifests/sample-instrumented-applications/sample-tracing-app/README.md)
 4. [Jaeger Deployment](manifests/jaeger/jaeger.md)
-5. [Grafana Agent](manifests/grafana-agent/README.md)
 2. [OpenTelemetry Collector No Operator](manifests/otel-collector/README.md)
 2. [Create Amazon Machine Image for RHEL Device Edge OS](ami/README.md)
 
