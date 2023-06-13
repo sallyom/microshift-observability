@@ -3,7 +3,8 @@
 Assumes
 
 0. RHEL4Edge machine created similar to [Red Hat Device Edge with MicroShift](https://cloud.redhat.com/blog/meet-red-hat-device-edge-with-microshift)
-0. For RHEL Device Edge with necessary Performanc CoPilot packages, see [rhde-microshift.toml](./PCP/rhde-microshift.toml)
+1. The steps in the above post have been updated to `RHEL 9.2` with [Red Hat Device Edge 9.2](../rheledge-imagebuilder/README.md).
+0. For RHEL Device Edge with necessary Performance CoPilot packages, see [rhde-microshift.toml](./PCP/rhde-microshift.toml)
 1. RHEL4Edge machine is currently created & stopped, with a QCOW2 image at /var/lib/libvirt/images/rheledge.qcow2
 2. The following roles are created in an AWS account. View trust-policy.json, role-policy.json files in this directory.
 3. Access to an s3 bucket in AWS
