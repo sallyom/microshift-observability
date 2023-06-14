@@ -1,7 +1,0 @@
-id = "microshift-local"
-name = "MicroShift local repo"
-type = "yum-baseurl"
-url = "file:///var/repos/microshift-local/"
-check_gpg = false
-check_ssl = false
-system = false

@@ -38,17 +38,16 @@ Now copy contents of `thanos-receive-url` to [otelcol-config.yaml](./otelcol-con
 
 ```bash
 # Note the ca.crt & edge-token are assumed to exist at $(pwd)/.
-
 sudo podman run --rm -d --name otelcol-host \
   --security-opt label=disable  \
-  --user=0 \
+  --user=0   \
   --cap-add SYS_ADMIN \
-  --tmpfs /tmp --tmpfs /run \
-  -v /var/log/:/var/log 
+  --tmpfs /tmp --tmpfs /run \ 
+  -v /var/log/:/var/log \ 
   -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
-  -v $(pwd)/ca.crt:/conf/ca.crt:z \
-  -v $(pwd)/edge-token:/conf/edge-token:z \
-  -v $(pwd)/otelcol-config.yaml:/etc/otelcol-contrib/config.yaml:z\
+  -v $(pwd)/thanos-ocp/ca.crt:/conf/ca.crt:z \
+  -v $(pwd)/thanos-ocp/edge-token:/conf/edge-token:z  \
+  -v $(pwd)/thanos-ocp/otel-config-pcp-only.yaml:/etc/otelcol-contrib/config.yaml:z \
   -v $(pwd)/otc:/otc:z  \
   --net=host \
   quay.io/sallyom/ubi8-otelcolcontrib:latest --config=file:/etc/otelcol-contrib/config.yaml
