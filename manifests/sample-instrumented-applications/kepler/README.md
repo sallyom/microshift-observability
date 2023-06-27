@@ -98,7 +98,7 @@ Run the following to launch an OpenTelemetry Collector sidecar container in the 
 ```bash
 oc create configmap -n kepler client-ca --from-file ~/ca.crt
 oc create configmap -n kepler edge-token --from-file ~/edge-token
-oc create configmap -n kepler -f microshift-otelconfig.yaml
+oc create -n kepler -f microshift-otelconfig.yaml
 
 # patch service to expose otlp ports
 oc patch service kepler-exporter -n kepler --patch-file https://raw.githubusercontent.com/sallyom/microshift-observability/main/manifests/sample-instrumented-applications/kepler/patch-service.yaml

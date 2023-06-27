@@ -9,3 +9,4 @@ ami/ushift.raw
 *ca.crt
 **/private*
 **/.raw*
+**/minio-secret*
