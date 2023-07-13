@@ -1,5 +1,9 @@
 ## Observability in MicroShift
 
+| :exclamation:  This repo is no longer maintained. Please instead view the contents at `https://github.com/redhat-et/edge-ocp-observability`   |
+|-----------------------------------------------------------------------------------------------------------------------------------------------|
+
+This repository is no longer maintained. The contents are now maintained at `https://github.com/redhat-et/edge-ocp-observability
 This repository is a collection of manifests to enable observability in MicroShift. To get started, follow this README to deploy a VM and MicroShift.
 Then, view the following observability scenarios:
 
